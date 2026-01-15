@@ -1,0 +1,32 @@
+# General
+.DS_Store
+.agent/
+__pycache__/
+*.log
+
+# Case-specific generated folders
+case_*/
+
+# OpenFOAM generated files
+**/constant/polyMesh/
+**/postProcessing/
+**/processor*/
+**/dynamicMeshDict.bak
+**/*.foam
+
+# Time step results (binary/heavy)
+# Keep the initial '0' folder
+[0-9]*
+![0]/
+**/[1-9]*
+**/*.[0-9]*
+
+# Meshing files
+**/*.msh
+**/*.geo.bak
+
+# Media/Videos
+**/*.avi
+**/*.mp4
+**/*.png
+**/*.jpg
