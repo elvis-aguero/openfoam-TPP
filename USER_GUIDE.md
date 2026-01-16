@@ -1,69 +1,58 @@
-# 🌊 Circular Sloshing Tank - User Guide
 
-Welcome! This guide will help you run the sloshing simulation without needing to be an OpenFOAM expert.
+Welcome! This guide will help you run the sloshing simulation using the **Sloshing Manager**, a unified tool for case setup and execution.
 
 ## 🚀 Quick Start
-To run the standard simulation (Flat bottom tank, default settings), open your terminal in the **root folder** (where `Makefile` is) and type:
+To run the standard simulation (Default settings), open your terminal in the **root folder** and type:
 
 ```bash
-make run
+python3 sloshing_manager.py --run
 ```
+
 This will:
-1.  **Create a new folder** (e.g., `case_H1.0_D0.5_flat_...`).
-2.  Copy the template files into it.
-3.  Generate the mesh and motion files inside that folder.
-4.  Run the simulation.
+1.  **Create a new case folder** (e.g., `case_H0.1_D0.02_...`).
+2.  Run all setup scripts (Mesh, Motion, Initial Fields).
+3.  **Automatically Run** the simulation (if on Oscar, it will queue a Slurm job; if in a VM, it will run locally).
 
 ---
 
 ## 🧪 Common "Recipes"
 
-Here are the commands for specific scenarios you might want to test.
+Use flags to override default values.
 
-### 1. "I want the Round Bottom (Hemispherical) Tank"
-If you want to simulate the tank with a round cap at the bottom instead of a flat one:
-
+### 1. "I want to change the Tank Geometry"
 ```bash
-make run GEO_TYPE=cap
+# Spherical Cap bottom
+python3 sloshing_manager.py --run --geo cap
+
+# Flat bottom (default)
+python3 sloshing_manager.py --run --geo flat
 ```
 
-### 2. "I want to change the Tank Height/Depth"
-To change the tank height (`H`) or diameter (`D`):
-*   `H`: Height of the tank (default 1.0 meter).
-*   `D`: Diameter of the tank (default 0.5 meters).
+### 2. "I want to change the Dimensions"
+*   `--H`: Height (m)
+*   `--D`: Diameter (m)
 
-Example: A taller, narrower tank:
+Example:
 ```bash
-make run H=2.0 D=0.3
+python3 sloshing_manager.py --run --H 0.15 --D 0.03
 ```
 
 ### 3. "I want to change the Motion"
-You can adjust how much it shakes (`MOTION_R`) and how fast (`MOTION_FREQ`):
-*   `MOTION_R`: Amplitude of the shake (in meters).
-*   `MOTION_FREQ`: Frequency of the shake (in Hz).
+*   `--R`: Amplitude radius (m)
+*   `--freq`: Frequency (Hz)
 
-Example: Faster, smaller shake:
+Example:
 ```bash
-make run MOTION_FREQ=1.0 MOTION_R=0.05
+python3 sloshing_manager.py --run --freq 1.5 --R 0.005
 ```
 
-### 4. "I want a Longer Simulation"
-By default, it runs for 10 seconds.
-*   `DURATION`: Total time in seconds.
+### 4. "I want to change the Simulation Time"
+*   `--duration`: Total time (s)
+*   `--ramp`: Soft-start ramp duration (s)
 
-Example: Run for 30 seconds:
+Example:
 ```bash
-make run DURATION=30.0
-```
-
-### 5. "I want to adjust the Soft Start (Ramp)"
-To avoid "impulsive" starts, the simulation ramps up the motion amplitude.
-*   `RAMP_DURATION`: Time in seconds to reach full amplitude. 
-*   **Default**: 10% of the total duration (e.g., 1.0s ramp for a 10s run).
-
-Example: A very slow 5-second ramp:
-```bash
-make run RAMP_DURATION=5.0
+python3 sloshing_manager.py --run --duration 30.0 --ramp 5.0
 ```
 
 ---
@@ -71,42 +60,27 @@ make run RAMP_DURATION=5.0
 ## 📊 How to View Results
 
 1.  Open **ParaView**.
-2.  Open the file named `case.foam` located in this folder.
-3.  In ParaView:
-    *   Click **Apply** (green button).
-    *   In the "Fields" list, check `alpha.water`.
-    *   Press the **Play** button (▶️) to watch the animation.
-
----
-
-## 🧹 Cleaning Up
-If you want to delete all previous results and start fresh:
-
-```bash
-make clean
-```
-(*It is a good practice to run this before starting a completely different configuration.*)
-
----
-
-## 💻 Running Locally vs on Oscar
-The `Makefile` is smart enough to detect where you are:
-*   **On your personal Mac/Linux**: If you have OpenFOAM installed, `make run` will build the folder **and** start the simulation.
-*   **On the Oscar Login Node**: If you run `make run`, it will safely **build the folders** but skip the simulation (to avoid using CPU on the login node). You can then use the Slurm Manager to submit them to compute nodes.
+2.  Open the file named `case.foam` located inside your specific `case_...` folder.
+3.  Click **Apply**, check `alpha.water`, and press **Play** (▶️).
 
 ---
 
 ## 🏛️ HPC / Slurm Management (Oscar @ CCV)
 
-If you are running on the **Oscar cluster** (Brown University), you can use the interactive Slurm manager to queue your simulations.
+The manager is smart! When you use `--run` on Oscar:
+1.  It **estimates resources** (RAM and Time) based on your mesh size.
+2.  It creates a `.slurm` script **inside** the case folder.
+3.  It **submits** the job automatically.
 
-1.  **Generate your cases** first using the `make` commands listed above.
-2.  **Run the manager**:
-    ```bash
-    python3 manage_slurm.py
-    ```
-3.  **Choose your mode**:
-    *   **Option 1 (Single)**: Browse and select a specific case to submit.
-    *   **Option 2 (Run All)**: Automatically queue every `case_*` folder in the directory.
+**Batch Mode**: To submit every case in the directory to the queue:
+```bash
+python3 sloshing_manager.py --all
+```
 
-**Note**: The manager is configured to use your `of13` Apptainer wrapper automatically. Each job defaults to 1 core, **64GB of RAM**, and **72 hours**. You can adjust these settings by editing the `SLURM_DEFAULTS` at the top of `manage_slurm.py`.
+---
+
+## 🧹 Cleaning Up
+To remove all generated cases and start fresh:
+```bash
+rm -rf case_*
+```
