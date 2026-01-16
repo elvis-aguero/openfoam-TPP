@@ -10,11 +10,13 @@ H = {H};
 R = {R};
 lc = {mesh_size};
 
-// Geometry using OpenCASCADE kernel for simple primitives
+// Geometry using OpenCASCADE kernel
 SetFactory("OpenCASCADE");
+Mesh.MshFileVersion = 2.2;
 
 // Cylinder
-Cylinder(1) = {{0, 0, 0, 0, 0, H, R}};
+v1 = newv;
+Cylinder(v1) = {{0, 0, 0, 0, 0, H, R}};
 
 // Mesh Quality
 Mesh.CharacteristicLengthMin = lc;
@@ -23,41 +25,30 @@ Mesh.CharacteristicLengthMax = lc;
 // Physical Groups
 eps = 1e-3;
 
-// Top
+// Find Top Surface (at z=H)
 Surface_Top[] = Surface In BoundingBox {{ -R-eps, -R-eps, H-eps, R+eps, R+eps, H+eps }};
 Physical Surface("atmosphere") = Surface_Top[];
 
-// Bottom
-Surface_Bot[] = Surface In BoundingBox {{ -R-eps, -R-eps, -eps, R+eps, R+eps, eps }};
+// All other surfaces are "walls"
+All_Surfs[] = Surface "*";
+Wall_Surfs[] = {{}};
 
-// Lateral (The rest)
-All_Surfaces[] = Surface "*";
-Lateral_Surfaces[] = {{}};
-
-For i In {{0 : #All_Surfaces[]-1}}
-    id = All_Surfaces[i];
+For i In {{0 : #All_Surfs[]-1}}
+    id = All_Surfs[i];
     is_top = 0;
-    is_bot = 0;
-    
     For j In {{0 : #Surface_Top[]-1}}
         If (id == Surface_Top[j])
             is_top = 1;
         EndIf
     EndFor
     
-    For k In {{0 : #Surface_Bot[]-1}}
-        If (id == Surface_Bot[k])
-            is_bot = 1;
-        EndIf
-    EndFor
-    
-    If (is_top == 0 && is_bot == 0)
-        Lateral_Surfaces[] += {{id}};
+    If (is_top == 0)
+        Wall_Surfs[] += {{id}};
     EndIf
 EndFor
 
-Physical Surface("walls") = {{Surface_Bot[], Lateral_Surfaces[]}};
-Physical Volume("internalMesh") = {{1}};
+Physical Surface("walls") = Wall_Surfs[];
+Physical Volume("internalMesh") = v1;
 """
     return geo_content
 
@@ -71,15 +62,13 @@ R = {R};
 lc = {mesh_size};
 
 SetFactory("OpenCASCADE");
+Mesh.MshFileVersion = 2.2;
 
 // Cylinder Body from z=0 to z=H
 v1 = newv;
 Cylinder(v1) = {{0, 0, 0, 0, 0, H, R}};
 
 // Spherical Cap at z=0 (radius R)
-// This sphere will fuse with the cylinder.
-// The top half (z > 0) is inside the cylinder.
-// The bottom half (z < 0) forms the hemispherical cap.
 v2 = newv;
 Sphere(v2) = {{0, 0, 0, R}};
 
@@ -92,20 +81,17 @@ Mesh.CharacteristicLengthMax = lc;
 
 eps = 1e-3;
 
-// Physical Surfaces
-
-// Top Surface (at z=H)
+// Find Top Surface (at z=H)
 Surface_Top[] = Surface In BoundingBox {{ -R-eps, -R-eps, H-eps, R+eps, R+eps, H+eps }};
 Physical Surface("atmosphere") = Surface_Top[];
 
-// Walls (Everything else)
-All_Surfaces[] = Surface "*";
-Wall_Surfaces[] = {{}};
+// All other surfaces are "walls"
+All_Surfs[] = Surface "*";
+Wall_Surfs[] = {{}};
 
-For i In {{0 : #All_Surfaces[]-1}}
-    id = All_Surfaces[i];
+For i In {{0 : #All_Surfs[]-1}}
+    id = All_Surfs[i];
     is_top = 0;
-    
     For j In {{0 : #Surface_Top[]-1}}
         If (id == Surface_Top[j])
             is_top = 1;
@@ -113,12 +99,12 @@ For i In {{0 : #All_Surfaces[]-1}}
     EndFor
     
     If (is_top == 0)
-        Wall_Surfaces[] += {{id}};
+        Wall_Surfs[] += {{id}};
     EndIf
 EndFor
 
-Physical Surface("walls") = Wall_Surfaces[];
-Physical Volume("internalMesh") = v_fused[];
+Physical Surface("walls") = Wall_Surfs[];
+Physical Volume("internalMesh") = v_fused[0];
 """
     return geo_content
 
