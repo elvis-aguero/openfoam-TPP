@@ -72,6 +72,7 @@ run:
 	else \
 		echo "Copying template to $(CASE_NAME)..."; \
 		cp -r $(TEMPLATE_DIR) $(CASE_NAME); \
+		chmod -R u+w $(CASE_NAME); \
 	fi
 	@if [ -z "$(HAS_OPENFOAM)" ] && [ -z "$(OF_PREFIX)" ]; then \
 		echo "⚠️  OpenFOAM commands (gmshToFoam) not found."; \
