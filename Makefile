@@ -73,7 +73,7 @@ run:
 		echo "Copying template to $(CASE_NAME)..."; \
 		cp -r $(TEMPLATE_DIR) $(CASE_NAME); \
 	fi
-	@if [ -z "$(HAS_OPENFOAM)" ]; then \
+	@if [ -z "$(HAS_OPENFOAM)" ] && [ -z "$(OF_PREFIX)" ]; then \
 		echo "⚠️  OpenFOAM commands (gmshToFoam) not found."; \
 		echo "✅  Case folder '$(CASE_NAME)' created successfully."; \
 		echo "    (Skipping simulation run)"; \
@@ -88,7 +88,8 @@ run:
 			MOTION_FREQ=$(MOTION_FREQ) \
 			DURATION=$(DURATION) \
 			DT=$(DT) \
-			RAMP_DURATION=$(RAMP_DURATION); \
+			RAMP_DURATION=$(RAMP_DURATION) \
+			OF_PREFIX="$(OF_PREFIX)"; \
 	fi
 
 clean:
