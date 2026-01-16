@@ -56,6 +56,16 @@ Example: Run for 30 seconds:
 make run DURATION=30.0
 ```
 
+### 5. "I want to adjust the Soft Start (Ramp)"
+To avoid "impulsive" starts, the simulation ramps up the motion amplitude.
+*   `RAMP_DURATION`: Time in seconds to reach full amplitude. 
+*   **Default**: 10% of the total duration (e.g., 1.0s ramp for a 10s run).
+
+Example: A very slow 5-second ramp:
+```bash
+make run RAMP_DURATION=5.0
+```
+
 ---
 
 ## 📊 How to View Results
@@ -76,3 +86,27 @@ If you want to delete all previous results and start fresh:
 make clean
 ```
 (*It is a good practice to run this before starting a completely different configuration.*)
+
+---
+
+## 💻 Running Locally vs on Oscar
+The `Makefile` is smart enough to detect where you are:
+*   **On your personal Mac/Linux**: If you have OpenFOAM installed, `make run` will build the folder **and** start the simulation.
+*   **On the Oscar Login Node**: If you run `make run`, it will safely **build the folders** but skip the simulation (to avoid using CPU on the login node). You can then use the Slurm Manager to submit them to compute nodes.
+
+---
+
+## 🏛️ HPC / Slurm Management (Oscar @ CCV)
+
+If you are running on the **Oscar cluster** (Brown University), you can use the interactive Slurm manager to queue your simulations.
+
+1.  **Generate your cases** first using the `make` commands listed above.
+2.  **Run the manager**:
+    ```bash
+    python3 manage_slurm.py
+    ```
+3.  **Choose your mode**:
+    *   **Option 1 (Single)**: Browse and select a specific case to submit.
+    *   **Option 2 (Run All)**: Automatically queue every `case_*` folder in the directory.
+
+**Note**: The manager is configured to use your `of13` Apptainer wrapper automatically. Each job defaults to 1 core, **64GB of RAM**, and **72 hours**. You can adjust these settings by editing the `SLURM_DEFAULTS` at the top of `manage_slurm.py`.

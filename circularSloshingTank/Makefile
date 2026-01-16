@@ -63,11 +63,12 @@ case:
 	python3 update_setFields.py $(H)
 
 # Run Simulation
+OF_PREFIX ?= 
 run:
 	# commands to be run in OpenFOAM environment
-	gmshToFoam cylinder.msh
-	setFields
-	foamRun
+	$(OF_PREFIX) gmshToFoam cylinder.msh
+	$(OF_PREFIX) setFields
+	$(OF_PREFIX) foamRun
 
 clean:
 	rm -f cylinder.geo cylinder.msh
