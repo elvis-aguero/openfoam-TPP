@@ -19,25 +19,31 @@
 #   DURATION      : Simulation duration in seconds (default: 10.0)
 #   DT            : Time step for motion file (default: 0.01)
 #   RAMP_DURATION : Smooth start ramp duration (default: -1, i.e., 10% of total)
+#   OSCAR         : Set to 1 to auto-configure for Oscar HPC (uses 'of13' wrapper)
 #
 # EXAMPLE:
-#   make run H=2.0 GEO_TYPE=cap
-#   -> Creates folder: case_H2.0_D0.5_cap_R0.1_f0.5
-#   -> Runs simulation inside that folder
+#   make run H=2.0 OSCAR=1
+#   -> Creates folder and runs with 'of13' wrapper.
 #
 # ====================================================================================
 
 # Defaults
-H ?= 1.0
-D ?= 0.5
-MESH_SIZE ?= 0.05
-MOTION_R ?= 0.1
-MOTION_FREQ ?= 0.5
+H ?= 0.1
+D ?= 0.02
+MESH_SIZE ?= 0.002
+MOTION_R ?= 0.003
+MOTION_FREQ ?= 2.0
 DURATION ?= 10.0
-DT ?= 0.01
+DT ?= 0.001
 RAMP_DURATION ?= -1
 GEO_TYPE ?= flat
+OSCAR ?= 0
 TEMPLATE_DIR := circularSloshingTank
+
+# If OSCAR=1 is set, automatically use the of13 wrapper
+ifeq ($(OSCAR),1)
+    OF_PREFIX := of13 
+endif
 
 # Generate unique case name
 CASE_NAME := case_H$(H)_D$(D)_$(GEO_TYPE)_R$(MOTION_R)_f$(MOTION_FREQ)
@@ -50,11 +56,13 @@ help:
 	@echo "OpenFOAM Case Generator"
 	@echo "-----------------------"
 	@echo "Current Configuration:"
-	@echo "  CASE_NAME   : $(CASE_NAME)"
-	@echo "  TEMPLATE    : $(TEMPLATE_DIR)"
-	@echo "  H (Height)  : $(H)"
-	@echo "  D (Diam)    : $(D)"
-	@echo "  GEO_TYPE    : $(GEO_TYPE)"
+	@echo "  CASE_NAME     : $(CASE_NAME)"
+	@echo "  H (Height)    : $(H)"
+	@echo "  D (Diam)      : $(D)"
+	@echo "  GEO_TYPE      : $(GEO_TYPE)"
+	@echo "  RAMP_DURATION : $(RAMP_DURATION)"
+	@echo "  OSCAR mode    : $(OSCAR)"
+	@echo "  OF_PREFIX     : $(OF_PREFIX)"
 	@echo ""
 	@echo "Usage:"
 	@echo "  make run        : Generate case folder and run simulation."

@@ -4,16 +4,74 @@ import sys
 import subprocess
 
 # --- Configuration for Oscar (CCV Brown University) ---
+# Base defaults if estimation fails
 SLURM_DEFAULTS = {
     "partition": "batch",
     "nodes": 1,
     "cpus": 1,
-    "mem": "64G",
-    "time": "72:00:00",
+    "mem": "8G", 
+    "time": "24:00:00",
 }
 
 # The user uses 'of13' wrapper to execute OpenFOAM commands via Apptainer
 OF_EXEC = "of13"
+
+def parse_case_params(case_name):
+    """
+    Extracts H and D from case name to estimate mesh size.
+    Format: case_H{H}_D{D}_...
+    """
+    try:
+        parts = case_name.split('_')
+        h = float(parts[1].replace('H', ''))
+        d = float(parts[2].replace('D', ''))
+        return h, d
+    except (IndexError, ValueError):
+        return 0.1, 0.02 # Fallback to defaults
+
+def estimate_resources(case_dir):
+    """
+    Estimates required memory and time based on domain volume.
+    Assumes a fixed mesh characteristic length (default 0.002m from Makefile).
+    """
+    h, d = parse_case_params(os.path.basename(case_dir))
+    
+    # Calculate Volume (Cylinder)
+    r = d / 2.0
+    vol = 3.14159 * (r**2) * h
+    
+    # Estimate Cell Count
+    # Mesh size is now 0.002m (2mm). Cell volume approx (mesh_size)^3
+    # This is a rough heuristic.
+    mesh_size = 0.002
+    cell_vol = mesh_size ** 3
+    n_cells = vol / cell_vol
+    
+    # Heuristics for OpenFOAM:
+    # ~1GB RAM per 1M cells is conservative.
+    # Time scales with N_cells and Duration. 
+    
+    # Memory
+    # Base 4GB + 1GB per 500k cells
+    req_mem_gb = 4 + (n_cells / 500000)
+    
+    # Time
+    # Base 4 hours + scaling
+    # We'll validly cap these since sloshing is expensive.
+    
+    if n_cells < 100000: # Small case
+        mem = "8G"
+        time = "24:00:00"
+    elif n_cells < 1000000: # Medium
+        mem = "32G"
+        time = "48:00:00"
+    else: # Large
+        mem = "64G"
+        time = "72:00:00"
+        
+    print(f"   📊 Est. Cells: {int(n_cells):,} | Allocating: {mem} RAM, {time}")
+    
+    return {"mem": mem, "time": time}
 
 def find_cases():
     """Scans the current directory for folders starting with 'case_'"""
@@ -24,6 +82,9 @@ def create_slurm_script(case_dir):
     """Creates a .slurm submission script inside the case directory"""
     script_path = os.path.join(case_dir, "run_simulation.slurm")
     
+    # Estimate resources dynamically
+    resources = estimate_resources(case_dir)
+    
     # Construct the SBATCH header as per user's template
     header = [
         "#!/usr/bin/env bash",
@@ -31,8 +92,8 @@ def create_slurm_script(case_dir):
         f"#SBATCH -p {SLURM_DEFAULTS['partition']}",
         f"#SBATCH -N {SLURM_DEFAULTS['nodes']}",
         f"#SBATCH -n {SLURM_DEFAULTS['cpus']}",
-        f"#SBATCH --time={SLURM_DEFAULTS['time']}",
-        f"#SBATCH --mem={SLURM_DEFAULTS['mem']}",
+        f"#SBATCH --time={resources['time']}",
+        f"#SBATCH --mem={resources['mem']}",
         f"#SBATCH -o {case_dir}/slurm.%j.out",
         f"#SBATCH -e {case_dir}/slurm.%j.err",
         "",
@@ -44,7 +105,7 @@ def create_slurm_script(case_dir):
         f"echo \"Case:  {case_dir}\"",
         "",
         f"# Call the simulation with the of13 prefix",
-        f"make -C {case_dir} run OF_PREFIX=\"{OF_EXEC} \"",
+        f"make -C {case_dir} run OSCAR=1",
         "",
         "echo \"End:   $(date)\""
     ]
