@@ -82,6 +82,17 @@ run:
 		cp -r $(TEMPLATE_DIR) $(CASE_NAME); \
 		chmod -R u+w $(CASE_NAME); \
 	fi
+	@echo "Preparing case files (meshing, motion, and fields) inside $(CASE_NAME)..."
+	@$(MAKE) -C $(CASE_NAME) prep \
+		H=$(H) \
+		D=$(D) \
+		MESH_SIZE=$(MESH_SIZE) \
+		GEO_TYPE=$(GEO_TYPE) \
+		MOTION_R=$(MOTION_R) \
+		MOTION_FREQ=$(MOTION_FREQ) \
+		DURATION=$(DURATION) \
+		DT=$(DT) \
+		RAMP_DURATION=$(RAMP_DURATION)
 	@if [ -z "$(HAS_OPENFOAM)" ] && [ -z "$(OF_PREFIX)" ]; then \
 		echo "⚠️  OpenFOAM commands (gmshToFoam) not found."; \
 		echo "✅  Case folder '$(CASE_NAME)' created successfully."; \

@@ -40,18 +40,17 @@ GEO_TYPE ?= flat
 
 .PHONY: all mesh motion case run clean help
 
-all: mesh motion case
+all: prep run
 
 help:
 	@grep -E '^[a-zA-Z_-]+:.*?$$' $(MAKEFILE_LIST) | awk 'BEGIN {FS = ":.*?## "}; {printf "\033[36m%-15s\033[0m %s\n", $$1, $$2}'
 	@echo ""
 	@echo "Read the header in Makefile for variable documentation."
 
-# Generate Mesh
-mesh:
+# Prepare geometry and coordinate files (Run on Host/Login Node)
+prep: motion case
 	python3 generate_mesh.py $(H) $(D) $(MESH_SIZE) $(GEO_TYPE)
 	gmsh -3 cylinder.geo -format msh2 -o cylinder.msh
-	gmshToFoam cylinder.msh  # Run this inside the OpenFOAM environment
 
 # Generate Motion
 motion:
