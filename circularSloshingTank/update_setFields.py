@@ -2,7 +2,7 @@
 import sys
 
 def update_setfields(h):
-    content = f"""/*--------------------------------*- C++ -*----------------------------------*\\
+    content = fr"""/*--------------------------------*- C++ -*----------------------------------*\
   =========                 |
   \\\\      /  F ield         | OpenFOAM: The Open Source CFD Toolbox
    \\\\    /   O peration     | Website:  https://openfoam.org

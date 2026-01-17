@@ -62,6 +62,10 @@ case:
 	python3 update_setFields.py $(H)
 
 # Run Simulation
+ifeq ($(OSCAR),1)
+    OF_PREFIX := of13 
+endif
+
 OF_PREFIX ?= 
 run:
 	# commands to be run in OpenFOAM environment
