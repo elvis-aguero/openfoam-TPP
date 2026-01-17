@@ -3,27 +3,81 @@ import os
 import sys
 import shutil
 import subprocess
-import argparse
 import math
+import itertools
+import re
 
 # --- Constants & Defaults ---
 TEMPLATE_DIR = "circularSloshingTank"
-MESH_SIZE_DEFAULT = 0.002
-DURATION_DEFAULT = 10.0
-DT_DEFAULT = 0.001
+DEFAULTS = {
+    "H": 0.1,
+    "D": 0.02,
+    "mesh": 0.002,
+    "geo": "flat",
+    "R": 0.003,
+    "freq": 2.0,
+    "duration": 10.0,
+    "dt": 0.001,
+    "ramp": -1,
+}
 
-def get_env_info():
-    """Detects the environment: Oscar, VM (Native OF), or Bare."""
-    has_sbatch = shutil.which("sbatch") is not None
-    has_of13 = shutil.which("of13") is not None
-    has_foam_run = shutil.which("foamRun") is not None
-    
-    if has_sbatch and has_of13:
-        return "oscar"
-    elif has_foam_run:
-        return "vm"
+# --- Utility Functions ---
+
+def parse_range(s):
+    """
+    Parses a MATLAB-style range (start:step:end) or comma-separated list.
+    Returns a list of floats.
+    """
+    s = s.strip()
+    if ':' in s:
+        parts = s.split(':')
+        if len(parts) == 2:
+            start, end = float(parts[0]), float(parts[1])
+            step = 1.0
+        elif len(parts) == 3:
+            start, step, end = float(parts[0]), float(parts[1]), float(parts[2])
+        else:
+            raise ValueError(f"Invalid range format: {s}")
+        # Generate range
+        vals = []
+        v = start
+        while v <= end + 1e-9:  # Tolerance for floating point
+            vals.append(round(v, 6))
+            v += step
+        return vals
     else:
-        return "bare"
+        # Comma-separated
+        return [float(x.strip()) for x in s.split(',')]
+
+def parse_indices(s, max_idx):
+    """
+    Parses comma-separated indices and ranges (e.g., "1, 3-5, 7").
+    Returns a list of 0-indexed integers.
+    """
+    indices = set()
+    for part in s.split(','):
+        part = part.strip()
+        if '-' in part:
+            start, end = part.split('-')
+            for i in range(int(start), int(end) + 1):
+                if 1 <= i <= max_idx:
+                    indices.add(i - 1)
+        else:
+            i = int(part)
+            if 1 <= i <= max_idx:
+                indices.add(i - 1)
+    return sorted(list(indices))
+
+def get_case_name(params):
+    """Generates a unique case folder name from parameters."""
+    return f"case_H{params['H']}_D{params['D']}_{params['geo']}_R{params['R']}_f{params['freq']}"
+
+def is_case_done(case_dir, duration):
+    """Checks if the simulation for this case is complete."""
+    # Check if final time folder exists with alpha.water
+    final_time_str = str(int(duration)) if duration == int(duration) else str(duration)
+    final_path = os.path.join(case_dir, final_time_str, "alpha.water")
+    return os.path.exists(final_path)
 
 def estimate_resources(h, d, mesh_size):
     """Estimates required memory and time based on domain volume."""
@@ -31,72 +85,79 @@ def estimate_resources(h, d, mesh_size):
     cell_vol = mesh_size ** 3
     n_cells = vol / cell_vol
     
-    if n_cells < 100000: # Small
+    if n_cells < 100000:
         return "8G", "24:00:00", n_cells
-    elif n_cells < 1000000: # Medium
+    elif n_cells < 1000000:
         return "32G", "48:00:00", n_cells
-    else: # Large
+    else:
         return "64G", "72:00:00", n_cells
 
-def setup_case(args):
-    """Creates the case directory and runs setup scripts."""
-    case_name = f"case_H{args.H}_D{args.D}_{args.geo}_R{args.R}_f{args.freq}"
-    
-    # 1. Copy Template
-    if os.path.exists(case_name):
-        print(f"⚠️ Case {case_name} already exists. Skipping copy.")
-    else:
-        print(f"📂 Creating case: {case_name}")
-        shutil.copytree(TEMPLATE_DIR, case_name)
-        # Ensure writable
-        for root, dirs, files in os.walk(case_name):
-            for d in dirs:
-                os.chmod(os.path.join(root, d), 0o777)
-            for f in files:
-                os.chmod(os.path.join(root, f), 0o666)
+# --- Core Actions ---
 
-    # 2. Run Setup Scripts (Local Python)
-    print("🔧 Running setup scripts...")
+def setup_case(params):
+    """Creates the case directory and runs setup scripts."""
+    case_name = get_case_name(params)
+    
+    if os.path.exists(case_name):
+        print(f"  ⚠️  {case_name} already exists. Skipping.")
+        return case_name
+    
+    print(f"  📂 Creating: {case_name}")
+    shutil.copytree(TEMPLATE_DIR, case_name)
+    
+    # Ensure writable
+    for root, dirs, files in os.walk(case_name):
+        for d in dirs:
+            os.chmod(os.path.join(root, d), 0o777)
+        for f in files:
+            os.chmod(os.path.join(root, f), 0o666)
+
     cwd = os.path.join(os.getcwd(), case_name)
     
     # Motion
     subprocess.run([
         sys.executable, "generate_motion.py", 
-        str(args.R), str(args.freq), str(args.duration), str(args.dt), str(args.ramp)
-    ], cwd=cwd, check=True)
+        str(params['R']), str(params['freq']), str(params['duration']), 
+        str(params['dt']), str(params['ramp'])
+    ], cwd=cwd, check=True, capture_output=True)
     
-    # Fields (setFieldsDict update)
-    subprocess.run([sys.executable, "update_setFields.py", str(args.H)], cwd=cwd, check=True)
+    # Fields
+    subprocess.run([sys.executable, "update_setFields.py", str(params['H'])], 
+                   cwd=cwd, check=True, capture_output=True)
     
-    # Mesh (.geo to .msh)
+    # Mesh Geometry
     subprocess.run([
         sys.executable, "generate_mesh.py", 
-        str(args.H), str(args.D), str(args.mesh), args.geo
-    ], cwd=cwd, check=True)
+        str(params['H']), str(params['D']), str(params['mesh']), params['geo']
+    ], cwd=cwd, check=True, capture_output=True)
     
-    # 3. Run Gmsh (Local or VM)
+    # Run Gmsh
     gmsh_path = shutil.which("gmsh")
     if gmsh_path:
-        print("🕸️ Generating mesh with Gmsh...")
         subprocess.run([
             "gmsh", "-3", "cylinder.geo", "-format", "msh2", "-o", "cylinder.msh"
-        ], cwd=cwd, check=True)
+        ], cwd=cwd, check=True, capture_output=True)
     else:
-        print("⚠️ gmsh not found in PATH. Skipping .msh generation.")
-
+        print("  ❌ gmsh not found in PATH. Cannot generate mesh.")
+        
     return case_name
 
-def run_oscar(case_name, args):
+def run_case_local(case_name):
+    """Runs simulation locally."""
+    print(f"  🏃 Running {case_name}...")
+    subprocess.run(["make", "-C", case_name, "run"], check=True)
+
+def run_case_oscar(case_name, params, is_oscar):
     """Submits job to Slurm on Oscar."""
-    mem, time_limit, n_cells = estimate_resources(args.H, args.D, args.mesh)
+    mem, time_limit, n_cells = estimate_resources(params['H'], params['D'], params['mesh'])
     script_path = os.path.join(case_name, "run_simulation.slurm")
     
     header = [
         "#!/usr/bin/env bash",
         f"#SBATCH -J {case_name}",
-        f"#SBATCH -p batch",
-        f"#SBATCH -N 1",
-        f"#SBATCH -n 1",
+        "#SBATCH -p batch",
+        "#SBATCH -N 1",
+        "#SBATCH -n 1",
         f"#SBATCH --time={time_limit}",
         f"#SBATCH --mem={mem}",
         f"#SBATCH -o {case_name}/slurm.%j.out",
@@ -105,65 +166,160 @@ def run_oscar(case_name, args):
         "set -euo pipefail",
         "export OMP_NUM_THREADS=1",
         "",
-        "echo \"Start: $(date)\"",
-        f"echo \"Case:  {case_name}\"",
-        "",
+        f"echo 'Case: {case_name}'",
         f"make -C {case_name} run OSCAR=1",
-        "",
-        "echo \"End:   $(date)\""
+        "echo 'End: $(date)'"
     ]
     
     with open(script_path, "w") as f:
         f.write("\n".join(header))
     
-    print(f"📊 Est. Cells: {int(n_cells):,}")
-    print(f"🚀 Submitting to Slurm ({mem}, {time_limit})...")
+    print(f"  🚀 Submitting {case_name} ({mem}, {time_limit})...")
     subprocess.run(["sbatch", script_path], check=True)
 
-def run_local(case_name):
-    """Runs simulation locally in VM."""
-    print(f"🏃 Starting simulation in {case_name}...")
-    subprocess.run(["make", "-C", case_name, "run"], check=True)
+# --- Menu System ---
 
-def main():
-    parser = argparse.ArgumentParser(description="Unified Sloshing Case Manager")
-    parser.add_argument("--H", type=float, default=0.1, help="Tank height (m)")
-    parser.add_argument("--D", type=float, default=0.02, help="Tank diameter (m)")
-    parser.add_argument("--mesh", type=float, default=MESH_SIZE_DEFAULT, help="Mesh size")
-    parser.add_argument("--geo", choices=["flat", "cap"], default="flat", help="Geometry type")
-    parser.add_argument("--R", type=float, default=0.003, help="Motion radius (m)")
-    parser.add_argument("--freq", type=float, default=2.0, help="Motion frequency (Hz)")
-    parser.add_argument("--duration", type=float, default=DURATION_DEFAULT, help="Duration (s)")
-    parser.add_argument("--dt", type=float, default=DT_DEFAULT, help="Motion DT (s)")
-    parser.add_argument("--ramp", type=float, default=-1, help="Ramp duration (s, -1 for 10%%)")
-    parser.add_argument("--setup-only", action="store_true", help="Only build the case, don't run")
-    parser.add_argument("--run", action="store_true", help="Run after setup (detects environment)")
-    parser.add_argument("--all", action="store_true", help="Queue all existing cases (Oscar only)")
-
-    args = parser.parse_args()
-    env = get_env_info()
+def menu_build_cases(is_oscar):
+    """Submenu 1: Build Case Setups"""
+    print("\n--- Build Case Setups ---")
+    print("Current Defaults:")
+    for k, v in DEFAULTS.items():
+        print(f"  {k:10}: {v}")
     
-    if args.all:
-        if env != "oscar":
-            print("❌ --all mode is only for Oscar.")
-            return
-        cases = [d for d in os.listdir('.') if os.path.isdir(d) and d.startswith('case_')]
-        for case in cases:
-            # We need to re-parse params to get resources right, or just use defaults
-            # For simplicity, we just submit them
-            run_oscar(case, args)
-        return
-
-    # Standard setup & run
-    case_name = setup_case(args)
+    sweeps = {}
+    while True:
+        param = input("\nOverride parameter (or 'done'): ").strip().lower()
+        if param == 'done' or param == '':
+            break
+        if param not in DEFAULTS:
+            print(f"  Unknown parameter: {param}")
+            continue
+        
+        val_str = input(f"  Enter value(s) for {param} (e.g., 0.1 or 0.1,0.2 or 0.1:0.05:0.2): ").strip()
+        try:
+            if param == 'geo':
+                sweeps[param] = [x.strip() for x in val_str.split(',')]
+            else:
+                sweeps[param] = parse_range(val_str)
+        except ValueError as e:
+            print(f"  ❌ Error parsing: {e}")
     
-    if args.run:
-        if env == "oscar":
-            run_oscar(case_name, args)
-        elif env == "vm":
-            run_local(case_name)
+    # Determine zip vs cartesian
+    if not sweeps:
+        # No sweeps, just use defaults
+        param_sets = [DEFAULTS.copy()]
+    else:
+        lengths = [len(v) for v in sweeps.values()]
+        
+        if len(set(lengths)) == 1:
+            # All same length: Zip
+            print(f"\n✅ All sweep lists are length {lengths[0]}. Using ZIP mode.")
+            keys = list(sweeps.keys())
+            param_sets = []
+            for i in range(lengths[0]):
+                p = DEFAULTS.copy()
+                for k in keys:
+                    p[k] = sweeps[k][i]
+                param_sets.append(p)
         else:
-            print("❌ OpenFOAM not detected. Setup complete, but cannot run simulation.")
+            # Different lengths: Cartesian
+            total = 1
+            for l in lengths:
+                total *= l
+            confirm = input(f"\n⚠️  Sweep lists have different lengths. This will generate {total} cases (Cartesian Product). Continue? (y/n): ").strip().lower()
+            if confirm != 'y':
+                print("Cancelled.")
+                return
+            
+            keys = list(sweeps.keys())
+            combos = list(itertools.product(*[sweeps[k] for k in keys]))
+            param_sets = []
+            for combo in combos:
+                p = DEFAULTS.copy()
+                for i, k in enumerate(keys):
+                    p[k] = combo[i]
+                param_sets.append(p)
+    
+    print(f"\nGenerating {len(param_sets)} case(s)...")
+    for params in param_sets:
+        setup_case(params)
+    print("✅ Done building cases.")
+
+def menu_run_cases(is_oscar):
+    """Submenu 2: Run Cases"""
+    print("\n--- Run Cases ---")
+    
+    cases = sorted([d for d in os.listdir('.') if os.path.isdir(d) and d.startswith('case_')])
+    if not cases:
+        print("No cases found. Use 'Build Case Setups' first.")
+        return
+    
+    # Display cases with status
+    print("Available Cases:")
+    for i, c in enumerate(cases):
+        # Try to infer duration from folder name (hacky, but works for now)
+        # Or assume default
+        status = "(DONE)" if is_case_done(c, DEFAULTS['duration']) else ""
+        print(f"  {i+1}) {c} {status}")
+    
+    idx_str = input("\nEnter case indices to run (e.g., 1, 3-5, all): ").strip().lower()
+    if idx_str == 'all':
+        indices = list(range(len(cases)))
+    else:
+        indices = parse_indices(idx_str, len(cases))
+    
+    if not indices:
+        print("No valid indices selected.")
+        return
+    
+    print(f"\nRunning {len(indices)} case(s)...")
+    
+    has_openfoam = shutil.which("foamRun") is not None
+    
+    for i in indices:
+        case_name = cases[i]
+        params = DEFAULTS.copy()  # Ideally, parse from folder name or config
+        
+        if is_oscar:
+            run_case_oscar(case_name, params, is_oscar)
+        elif has_openfoam:
+            run_case_local(case_name)
+        else:
+            print(f"  ❌ OpenFOAM not installed. Cannot run {case_name} locally.")
+
+def menu_postprocess(is_oscar):
+    """Submenu 3: Postprocess"""
+    print("\n🚧 Postprocessing is coming soon!")
+
+def main_menu():
+    """Main entry point."""
+    print("\n" + "="*40)
+    print("   Sloshing Tank Manager")
+    print("="*40)
+    
+    oscar_input = input("Are you on Oscar? (y/n): ").strip().lower()
+    is_oscar = oscar_input == 'y'
+    
+    while True:
+        print("\n--- Main Menu ---")
+        print("1) Build Case Setups")
+        print("2) Run Cases")
+        print("3) Postprocess Cases")
+        print("Q) Quit")
+        
+        choice = input("\nSelect an option: ").strip().lower()
+        
+        if choice == '1':
+            menu_build_cases(is_oscar)
+        elif choice == '2':
+            menu_run_cases(is_oscar)
+        elif choice == '3':
+            menu_postprocess(is_oscar)
+        elif choice == 'q':
+            print("Goodbye!")
+            break
+        else:
+            print("Invalid option.")
 
 if __name__ == "__main__":
-    main()
+    main_menu()

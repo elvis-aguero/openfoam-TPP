@@ -1,86 +1,55 @@
+# 🌊 Circular Sloshing Tank - User Guide
 
-Welcome! This guide will help you run the sloshing simulation using the **Sloshing Manager**, a unified tool for case setup and execution.
+Welcome! This guide will help you run the sloshing simulation using the **interactive Sloshing Manager**.
 
 ## 🚀 Quick Start
-To run the standard simulation (Default settings), open your terminal in the **root folder** and type:
-
+Run the manager:
 ```bash
-python3 sloshing_manager.py --run
+python3 sloshing_manager.py
 ```
 
-This will:
-1.  **Create a new case folder** (e.g., `case_H0.1_D0.02_...`).
-2.  Run all setup scripts (Mesh, Motion, Initial Fields).
-3.  **Automatically Run** the simulation (if on Oscar, it will queue a Slurm job; if in a VM, it will run locally).
+You will be prompted:
+1.  **Are you on Oscar?** (Y/N) - This determines whether jobs are submitted to Slurm.
+2.  **Main Menu**:
+    *   **1) Build Case Setups**: Create one or more simulation cases.
+    *   **2) Run Cases**: Run or submit selected cases.
+    *   **3) Postprocess**: (Coming soon).
 
 ---
 
-## 🧪 Common "Recipes"
+## 🛠️ Building Cases (Sweeps)
 
-Use flags to override default values.
+When you select "Build Case Setups", you can:
+1.  **Use defaults**: Just press Enter at the prompt to generate one default case.
+2.  **Override a single parameter**: Enter the parameter name (e.g., `H`) and a new value.
+3.  **Sweep over a parameter**: Enter a list like `0.1, 0.15, 0.2` or a MATLAB-style range like `0.1:0.05:0.2`.
 
-### 1. "I want to change the Tank Geometry"
-```bash
-# Spherical Cap bottom
-python3 sloshing_manager.py --run --geo cap
-
-# Flat bottom (default)
-python3 sloshing_manager.py --run --geo flat
-```
-
-### 2. "I want to change the Dimensions"
-*   `--H`: Height (m)
-*   `--D`: Diameter (m)
-
-Example:
-```bash
-python3 sloshing_manager.py --run --H 0.15 --D 0.03
-```
-
-### 3. "I want to change the Motion"
-*   `--R`: Amplitude radius (m)
-*   `--freq`: Frequency (Hz)
-
-Example:
-```bash
-python3 sloshing_manager.py --run --freq 1.5 --R 0.005
-```
-
-### 4. "I want to change the Simulation Time"
-*   `--duration`: Total time (s)
-*   `--ramp`: Soft-start ramp duration (s)
-
-Example:
-```bash
-python3 sloshing_manager.py --run --duration 30.0 --ramp 5.0
-```
+**Zip vs Cartesian**:
+*   If all sweep lists have the **same length**, they are **zipped** (paired 1-to-1).
+*   If lengths **differ**, a **Cartesian product** is generated (all combinations). You will be asked to confirm.
 
 ---
 
-## 📊 How to View Results
+## 🏃 Running Cases
+
+When you select "Run Cases":
+1.  The manager scans for `case_*` folders.
+2.  It shows the status: cases that are complete will have `(DONE)` next to them.
+3.  Enter the indices of cases you want to run (e.g., `1, 3-5, all`).
+4.  On **Oscar**: Jobs are submitted to Slurm with smart resource allocation.
+5.  **Locally**: If OpenFOAM is installed, simulations run sequentially.
+
+---
+
+## 📊 Viewing Results (ParaView)
 
 1.  Open **ParaView**.
-2.  Open the file named `case.foam` located inside your specific `case_...` folder.
+2.  Open `case.foam` inside your `case_...` folder.
 3.  Click **Apply**, check `alpha.water`, and press **Play** (▶️).
 
 ---
 
-## 🏛️ HPC / Slurm Management (Oscar @ CCV)
-
-The manager is smart! When you use `--run` on Oscar:
-1.  It **estimates resources** (RAM and Time) based on your mesh size.
-2.  It creates a `.slurm` script **inside** the case folder.
-3.  It **submits** the job automatically.
-
-**Batch Mode**: To submit every case in the directory to the queue:
-```bash
-python3 sloshing_manager.py --all
-```
-
----
-
 ## 🧹 Cleaning Up
-To remove all generated cases and start fresh:
 ```bash
 rm -rf case_*
 ```
