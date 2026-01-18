@@ -4,6 +4,12 @@
 __pycache__/
 *.log
 
+# Python virtual environment
+sloshing/
+venv/
+env/
+*.pyc
+
 # Case-specific generated folders
 case_*/
 

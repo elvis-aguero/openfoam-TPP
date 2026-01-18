@@ -3,6 +3,45 @@ import os
 import sys
 import shutil
 import subprocess
+
+# --- Dependency Management ---
+def ensure_dependencies():
+    """Check and install required Python packages."""
+    try:
+        import numpy
+        import scipy
+    except ImportError:
+        print("\n⚠️  Missing dependencies detected.")
+        print("Installing required packages (numpy, scipy)...")
+        
+        # Try to use existing venv or create one
+        venv_path = os.path.join(os.path.dirname(__file__), "sloshing")
+        
+        if not os.path.exists(venv_path):
+            print(f"Creating virtual environment: {venv_path}")
+            subprocess.run([sys.executable, "-m", "venv", venv_path], check=True)
+        
+        # Get pip from venv
+        if sys.platform == "win32":
+            pip_path = os.path.join(venv_path, "Scripts", "pip")
+            python_path = os.path.join(venv_path, "Scripts", "python")
+        else:
+            pip_path = os.path.join(venv_path, "bin", "pip")
+            python_path = os.path.join(venv_path, "bin", "python3")
+        
+        # Install requirements
+        req_file = os.path.join(os.path.dirname(__file__), "requirements.txt")
+        subprocess.run([pip_path, "install", "-r", req_file], check=True)
+        
+        print("\n✅ Dependencies installed successfully!")
+        print(f"Restarting with virtual environment...\n")
+        
+        # Restart script with venv python
+        os.execv(python_path, [python_path] + sys.argv)
+
+# Run dependency check
+ensure_dependencies()
+
 import math
 import itertools
 import re
