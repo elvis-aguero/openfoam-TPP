@@ -364,9 +364,209 @@ def menu_run_cases(is_oscar):
         else:
             print(f"  ❌ OpenFOAM not installed. Cannot run {case_name} locally.")
 
+def generate_video(case_dir):
+    """Generates a video from OpenFOAM results using ParaView."""
+    print(f"  🎬 Generating video for {case_dir}...")
+    
+    # Create ParaView Python script
+    script_content = f"""
+from paraview.simple import *
+
+# Load case
+case = OpenFOAMReader(FileName='{case_dir}/case.foam')
+case.MeshRegions = ['internalMesh']
+case.CellArrays = ['alpha.water', 'U', 'p_rgh']
+
+# Get animation scene
+animationScene = GetAnimationScene()
+animationScene.UpdateAnimationUsingDataTimeSteps()
+
+# Create render view
+renderView = CreateView('RenderView')
+renderView.ViewSize = [1920, 1080]
+renderView.Background = [1, 1, 1]
+
+# Show data
+display = Show(case, renderView)
+display.Representation = 'Surface'
+display.ColorArrayName = ['CELLS', 'alpha.water']
+
+# Color by alpha.water
+ColorBy(display, ('CELLS', 'alpha.water'))
+alphaLUT = GetColorTransferFunction('alpha.water')
+alphaLUT.RescaleTransferFunction(0.0, 1.0)
+alphaLUT.ApplyPreset('Cool to Warm', True)
+
+# Camera setup
+renderView.ResetCamera()
+renderView.CameraPosition = [0.0, -0.15, 0.1]
+renderView.CameraFocalPoint = [0.0, 0.0, 0.05]
+renderView.CameraViewUp = [0.0, 0.0, 1.0]
+
+# Save animation
+SaveAnimation('{case_dir}/animation.mp4', renderView, 
+              ImageResolution=[1920, 1080],
+              FrameRate=30)
+
+print("Video saved to {case_dir}/animation.mp4")
+"""
+    
+    script_path = os.path.join(case_dir, "render_video.py")
+    with open(script_path, "w") as f:
+        f.write(script_content)
+    
+    # Run pvpython
+    pvpython = shutil.which("pvpython")
+    if not pvpython:
+        print(f"  ❌ pvpython not found. Install ParaView to generate videos.")
+        return False
+    
+    try:
+        subprocess.run([pvpython, script_path], cwd=case_dir, check=True, 
+                      capture_output=True, text=True)
+        print(f"  ✅ Video saved: {case_dir}/animation.mp4")
+        return True
+    except subprocess.CalledProcessError as e:
+        print(f"  ❌ Error generating video: {e.stderr}")
+        return False
+
+def extract_interface(case_dir):
+    """Extracts the water-air interface (alpha.water=0.5) for all timesteps."""
+    print(f"  📊 Extracting interface for {case_dir}...")
+    
+    # Create ParaView Python script
+    script_content = f"""
+from paraview.simple import *
+import os
+
+# Load case
+case = OpenFOAMReader(FileName='{case_dir}/case.foam')
+case.MeshRegions = ['internalMesh']
+case.CellArrays = ['alpha.water']
+
+# Get timesteps
+timesteps = case.TimestepValues
+print(f"Found {{len(timesteps)}} timesteps")
+
+# Create output directory
+output_dir = '{case_dir}/interface_data'
+os.makedirs(output_dir, exist_ok=True)
+
+# Extract iso-surface at alpha.water = 0.5
+contour = Contour(Input=case)
+contour.ContourBy = ['CELLS', 'alpha.water']
+contour.Isosurfaces = [0.5]
+
+# CSV for summary statistics
+csv_data = []
+csv_data.append("time,max_z,min_z,mean_z,num_points")
+
+for i, t in enumerate(timesteps):
+    # Update to current timestep
+    UpdatePipeline(time=t)
+    
+    # Save VTP file (full 3D interface)
+    vtp_file = os.path.join(output_dir, f'interface_t{{t:.6f}}.vtp')
+    SaveData(vtp_file, contour)
+    
+    # Get interface data for statistics
+    data = servermanager.Fetch(contour)
+    if data.GetNumberOfPoints() > 0:
+        points = data.GetPoints()
+        z_coords = [points.GetPoint(j)[2] for j in range(data.GetNumberOfPoints())]
+        max_z = max(z_coords)
+        min_z = min(z_coords)
+        mean_z = sum(z_coords) / len(z_coords)
+        num_pts = len(z_coords)
+    else:
+        max_z = min_z = mean_z = 0.0
+        num_pts = 0
+    
+    csv_data.append(f"{{t}},{{max_z}},{{min_z}},{{mean_z}},{{num_pts}}")
+    
+    if (i+1) % 10 == 0:
+        print(f"  Processed {{i+1}}/{{len(timesteps)}} timesteps")
+
+# Save CSV summary
+csv_file = os.path.join(output_dir, 'interface_summary.csv')
+with open(csv_file, 'w') as f:
+    f.write('\\n'.join(csv_data))
+
+print(f"Interface data saved to {{output_dir}}/")
+print(f"  - VTP files: interface_t*.vtp ({{len(timesteps)}} files)")
+print(f"  - Summary: interface_summary.csv")
+"""
+    
+    script_path = os.path.join(case_dir, "extract_interface.py")
+    with open(script_path, "w") as f:
+        f.write(script_content)
+    
+    # Run pvpython
+    pvpython = shutil.which("pvpython")
+    if not pvpython:
+        print(f"  ❌ pvpython not found. Install ParaView to extract interfaces.")
+        return False
+    
+    try:
+        result = subprocess.run([pvpython, script_path], cwd=case_dir, check=True, 
+                               capture_output=True, text=True)
+        print(result.stdout)
+        print(f"  ✅ Interface extracted: {case_dir}/interface_data/")
+        return True
+    except subprocess.CalledProcessError as e:
+        print(f"  ❌ Error extracting interface: {e.stderr}")
+        return False
+
 def menu_postprocess(is_oscar):
     """Submenu 3: Postprocess"""
-    print("\n🚧 Postprocessing is coming soon!")
+    print("\n--- Postprocess Cases ---")
+    
+    cases = sorted([d for d in os.listdir('.') if os.path.isdir(d) and d.startswith('case_')])
+    if not cases:
+        print("No cases found.")
+        return
+    
+    # Display cases
+    print("Available Cases:")
+    for i, c in enumerate(cases):
+        status = "(DONE)" if is_case_done(c, DEFAULTS['duration']) else ""
+        print(f"  {i+1}) {c} {status}")
+    
+    print("\nPostprocess Options:")
+    print("1) Generate Videos")
+    print("2) Extract Interface Data")
+    print("Q) Back")
+    
+    choice = input("\nSelect: ").strip()
+    
+    if choice == '1':
+        idx_str = input("\nEnter case indices for video generation (e.g., 1, 3-5, all): ").strip().lower()
+        if idx_str == 'all':
+            indices = list(range(len(cases)))
+        else:
+            indices = parse_indices(idx_str, len(cases))
+        
+        if not indices:
+            print("No valid indices selected.")
+            return
+        
+        print(f"\nGenerating videos for {len(indices)} case(s)...")
+        for i in indices:
+            generate_video(cases[i])
+    elif choice == '2':
+        idx_str = input("\nEnter case indices for interface extraction (e.g., 1, 3-5, all): ").strip().lower()
+        if idx_str == 'all':
+            indices = list(range(len(cases)))
+        else:
+            indices = parse_indices(idx_str, len(cases))
+        
+        if not indices:
+            print("No valid indices selected.")
+            return
+        
+        print(f"\nExtracting interfaces for {len(indices)} case(s)...")
+        for i in indices:
+            extract_interface(cases[i])
 
 def main_menu():
     """Main entry point."""

@@ -13,7 +13,7 @@ You will be prompted:
 2.  **Main Menu**:
     *   **1) Build Case Setups**: Create one or more simulation cases.
     *   **2) Run Cases**: Run or submit selected cases.
-    *   **3) Postprocess**: (Coming soon).
+    *   **3) Postprocess**: Generate videos and extract interface data.
 
 ---
 
@@ -38,6 +38,23 @@ When you select "Run Cases":
 3.  Enter the indices of cases you want to run (e.g., `1, 3-5, all`).
 4.  On **Oscar**: Jobs are submitted to Slurm with smart resource allocation.
 5.  **Locally**: If OpenFOAM is installed, simulations run sequentially.
+
+---
+
+## 🎬 Postprocessing
+
+Select **3) Postprocess** from the main menu:
+
+**1) Generate Videos**:
+- Creates MP4 animations showing `alpha.water` field evolution
+- Requires ParaView (`pvpython` must be in PATH)
+- Output: `case_*/animation.mp4`
+
+**2) Extract Interface Data**:
+- Extracts water-air interface (iso-surface at `alpha.water = 0.5`)
+- Output:
+  - `case_*/interface_data/interface_t*.vtp` - Full 3D interface geometry (VTK format)
+  - `case_*/interface_data/interface_summary.csv` - Height statistics (time, max_z, min_z, mean_z)
 
 ---
 

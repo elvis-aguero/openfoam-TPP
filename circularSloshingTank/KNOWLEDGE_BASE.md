@@ -35,19 +35,30 @@ To avoid infinite acceleration (velocity impulse) at $t=0$ caused by instantly a
 When generating OpenFOAM dictionaries using Python `f-strings`, curly braces `{}` must be escaped (doubled) as `{{}}` to prevent Python from interpreting them as variable placeholders.
 
 ## 🏃 Current Workflow
-1.  **Mesh (`make mesh`)**: Python script generates a `.geo` file for Gmsh, which is then meshed and converted to OpenFOAM format.
-2.  **Motion (`make motion`)**: Prescribes oscillation frequencies and amplitudes into `constant/6DoF.dat`.
-3.  **Setup (`make case`)**: Runs `update_setFields.py` to match the liquid level to the tank height (default H/2).
-4.  **Initialize (`setFields`)**: MUST be run before solving to populate `alpha.water`.
-5.  **Solve (`foamRun`)**: Runs the `incompressibleVoF` solver.
+
+**Interactive Manager** (`python3 sloshing_manager.py`):
+
+1.  **Build Case Setups**: 
+    - Configure parameters (H, D, mesh, geo, R, freq, duration, dt, ramp)
+    - Support for parameter sweeps (MATLAB-style ranges: `0.1:0.05:0.2`)
+    - Generates `case_*` folders with mesh, motion, and initial conditions
+    
+2.  **Run Cases**:
+    - Lists available cases with completion status
+    - On Oscar: Submits to Slurm with dynamic resource allocation
+    - Locally: Runs sequentially if OpenFOAM is installed
+    
+3.  **Postprocess**:
+    - Generate MP4 videos (`pvpython` required)
+    - Extract interface data (VTP files + CSV summary)
+
+**Default Parameters**:
+- Tank: H=0.1m, D=0.02m
+- Mesh: 0.002m characteristic length
+- Motion: 2.0Hz oscillation at 0.003m amplitude
+- Duration: 10s with 10% soft-start ramp
 
 ## 🎯 Project Goals
-- **Objective**: Study liquid resonance in circular geometry.
-- **Parameters**: 
-  - Tank: H=1.0, D=0.5.
-  - Mesh: Standard refinement at 0.05.
-  - Motion: 0.5Hz oscillation at 0.1m amplitude.
-- **Outcome**: Capture the free surface deformation and damping coefficients.
 
 ## ✅ Simulation Verification Checklist
 How to assess if the run was successful:
