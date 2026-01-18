@@ -517,6 +517,52 @@ print(f"  - Summary: interface_summary.csv")
         print(f"  ❌ Error extracting interface: {e.stderr}")
         return False
 
+def generate_potential_flow(case_dir):
+    """Generates potential flow theory prediction for wall elevation."""
+    import sys
+    sys.path.insert(0, 'utils')
+    from potential_flow import generate_wall_elevation_csv, print_summary
+    
+    print(f"  📐 Generating potential flow prediction for {case_dir}...")
+    
+    # Parse parameters from case name
+    # Format: case_H{H}_D{D}_{geo}_R{R}_f{freq}
+    import re
+    match = re.match(r'case_H([\d.]+)_D([\d.]+)_(\w+)_R([\d.]+)_f([\d.]+)', case_dir)
+    if not match:
+        print(f"  ❌ Could not parse parameters from case name: {case_dir}")
+        return False
+    
+    H = float(match.group(1))
+    D = float(match.group(2))
+    geo = match.group(3)
+    R_orbital = float(match.group(4))
+    freq = float(match.group(5))
+    
+    # Cylinder radius
+    R_cyl = D / 2.0
+    
+    # Liquid depth (assume H/2 fill level)
+    d = H / 2.0
+    
+    # Duration (try to get from case, otherwise use default)
+    duration = DEFAULTS['duration']
+    dt = 0.01  # Output time step
+    
+    try:
+        output_file, summary = generate_wall_elevation_csv(
+            case_dir, R_cyl, R_orbital, freq, d,
+            duration=duration, dt=dt, n_theta=64, n_modes=30
+        )
+        print_summary(summary)
+        print(f"  ✅ Potential flow data saved: {output_file}")
+        return True
+    except Exception as e:
+        print(f"  ❌ Error generating potential flow: {e}")
+        import traceback
+        traceback.print_exc()
+        return False
+
 def menu_postprocess(is_oscar):
     """Submenu 3: Postprocess"""
     print("\n--- Postprocess Cases ---")
@@ -535,6 +581,7 @@ def menu_postprocess(is_oscar):
     print("\nPostprocess Options:")
     print("1) Generate Videos")
     print("2) Extract Interface Data")
+    print("3) Generate Potential Flow Theory Prediction")
     print("Q) Back")
     
     choice = input("\nSelect: ").strip()
@@ -567,6 +614,20 @@ def menu_postprocess(is_oscar):
         print(f"\nExtracting interfaces for {len(indices)} case(s)...")
         for i in indices:
             extract_interface(cases[i])
+    elif choice == '3':
+        idx_str = input("\nEnter case indices for potential flow generation (e.g., 1, 3-5, all): ").strip().lower()
+        if idx_str == 'all':
+            indices = list(range(len(cases)))
+        else:
+            indices = parse_indices(idx_str, len(cases))
+        
+        if not indices:
+            print("No valid indices selected.")
+            return
+        
+        print(f"\nGenerating potential flow predictions for {len(indices)} case(s)...")
+        for i in indices:
+            generate_potential_flow(cases[i])
 
 def main_menu():
     """Main entry point."""
