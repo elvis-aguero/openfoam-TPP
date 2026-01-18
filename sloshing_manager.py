@@ -183,24 +183,47 @@ def menu_build_cases(is_oscar):
     """Submenu 1: Build Case Setups"""
     print("\n--- Build Case Setups ---")
     print("Current Defaults:")
-    for k, v in DEFAULTS.items():
-        print(f"  {k:10}: {v}")
+    param_keys = list(DEFAULTS.keys())
+    for i, k in enumerate(param_keys):
+        print(f"  {i+1}) {k:10}: {DEFAULTS[k]}")
+    
+    print("\nEnter parameter number or name to override, or 'done' to finish.")
+    print("Examples: '1' or 'H'. For sweeps, use '0.1, 0.2' or '0.1:0.05:0.2'.")
     
     sweeps = {}
     while True:
-        param = input("\nOverride parameter (or 'done'): ").strip().lower()
-        if param == 'done' or param == '':
+        user_input = input("\nOverride: ").strip()
+        if user_input.lower() == 'done' or user_input == '':
             break
-        if param not in DEFAULTS:
-            print(f"  Unknown parameter: {param}")
-            continue
         
-        val_str = input(f"  Enter value(s) for {param} (e.g., 0.1 or 0.1,0.2 or 0.1:0.05:0.2): ").strip()
+        # Check if it's a number (index)
+        if user_input.isdigit():
+            idx = int(user_input) - 1
+            if 0 <= idx < len(param_keys):
+                param = param_keys[idx]
+            else:
+                print(f"  Invalid index: {user_input}")
+                continue
+        else:
+            # It's a name (case-sensitive match, then case-insensitive fallback)
+            if user_input in DEFAULTS:
+                param = user_input
+            else:
+                # Try case-insensitive
+                match = [k for k in DEFAULTS if k.lower() == user_input.lower()]
+                if match:
+                    param = match[0]
+                else:
+                    print(f"  Unknown parameter: {user_input}")
+                    continue
+        
+        val_str = input(f"  Enter value(s) for '{param}' (e.g., 0.1 or 0.1,0.2 or 0.1:0.05:0.2): ").strip()
         try:
             if param == 'geo':
                 sweeps[param] = [x.strip() for x in val_str.split(',')]
             else:
                 sweeps[param] = parse_range(val_str)
+            print(f"  ✅ {param} = {sweeps[param]}")
         except ValueError as e:
             print(f"  ❌ Error parsing: {e}")
     
