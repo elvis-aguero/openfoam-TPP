@@ -560,7 +560,7 @@ def generate_potential_flow(case_dir):
     """Generates potential flow theory prediction for wall elevation."""
     import sys
     sys.path.insert(0, 'utils')
-    from potential_flow import generate_wall_elevation_csv, print_summary
+    from potential_flow import generate_wall_elevation_csv, print_summary, generate_video_from_csv
     
     print(f"  📐 Generating potential flow prediction for {case_dir}...")
     
@@ -589,12 +589,20 @@ def generate_potential_flow(case_dir):
     dt = 0.01  # Output time step
     
     try:
+        # Generate CSV
         output_file, summary = generate_wall_elevation_csv(
             case_dir, R_cyl, R_orbital, freq, d,
             duration=duration, dt=dt, n_theta=64, n_modes=30
         )
         print_summary(summary)
         print(f"  ✅ Potential flow data saved: {output_file}")
+        
+        # Generate video
+        print(f"  🎬 Generating potential flow animation...")
+        video_file = generate_video_from_csv(output_file, case_dir, R_cyl, duration, fps=30)
+        if video_file:
+            print(f"  ✅ Animation saved: {video_file}")
+        
         return True
     except Exception as e:
         print(f"  ❌ Error generating potential flow: {e}")
@@ -604,7 +612,9 @@ def generate_potential_flow(case_dir):
 
 def menu_postprocess(is_oscar):
     """Submenu 3: Postprocess"""
-    print("\n--- Postprocess Cases ---")
+    print("\n" + "="*60)
+    print("  POSTPROCESS MENU")
+    print("="*60)
     
     cases = sorted([d for d in os.listdir('.') if os.path.isdir(d) and d.startswith('case_')])
     if not cases:
@@ -612,21 +622,24 @@ def menu_postprocess(is_oscar):
         return
     
     # Display cases
-    print("Available Cases:")
+    print("\nAvailable Cases:")
     for i, c in enumerate(cases):
         status = "(DONE)" if is_case_done(c, DEFAULTS['duration']) else ""
         print(f"  {i+1}) {c} {status}")
     
-    print("\nPostprocess Options:")
-    print("1) Generate Videos")
-    print("2) Extract Interface Data")
-    print("3) Generate Potential Flow Theory Prediction")
-    print("Q) Back")
+    print("\n" + "-"*60)
+    print("Select Action:")
+    print("  1) Generate Videos (OpenFOAM)")
+    print("  2) Extract Interface Data (OpenFOAM)")
+    print("  3) Generate Potential Flow Theory Prediction")
+    print("  Q) Back to Main Menu")
+    print("-"*60)
     
-    choice = input("\nSelect: ").strip()
+    choice = input("\nAction: ").strip()
     
     if choice == '1':
-        idx_str = input("\nEnter case indices for video generation (e.g., 1, 3-5, all): ").strip().lower()
+        print("\n→ Video Generation (OpenFOAM Results)")
+        idx_str = input("  Enter case numbers (e.g., 1, 3-5, all): ").strip().lower()
         if idx_str == 'all':
             indices = list(range(len(cases)))
         else:
@@ -640,7 +653,8 @@ def menu_postprocess(is_oscar):
         for i in indices:
             generate_video(cases[i])
     elif choice == '2':
-        idx_str = input("\nEnter case indices for interface extraction (e.g., 1, 3-5, all): ").strip().lower()
+        print("\n→ Interface Extraction (OpenFOAM Results)")
+        idx_str = input("  Enter case numbers (e.g., 1, 3-5, all): ").strip().lower()
         if idx_str == 'all':
             indices = list(range(len(cases)))
         else:
@@ -654,7 +668,8 @@ def menu_postprocess(is_oscar):
         for i in indices:
             extract_interface(cases[i])
     elif choice == '3':
-        idx_str = input("\nEnter case indices for potential flow generation (e.g., 1, 3-5, all): ").strip().lower()
+        print("\n→ Potential Flow Theory Prediction")
+        idx_str = input("  Enter case numbers (e.g., 1, 3-5, all): ").strip().lower()
         if idx_str == 'all':
             indices = list(range(len(cases)))
         else:

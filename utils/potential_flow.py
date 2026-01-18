@@ -218,6 +218,162 @@ def print_summary(summary):
     print("="*60 + "\n")
 
 
+def generate_video_from_csv(csv_file, case_dir, R, duration=10.0, fps=30):
+    """
+    Generate MP4 video from potential flow CSV data.
+    
+    Parameters:
+    -----------
+    csv_file : str
+        Path to CSV file with potential flow data
+    case_dir : str
+        Case directory for output
+    R : float
+        Cylinder radius (for visualization scaling)
+    duration : float
+        Video duration (s)
+    fps : int
+        Frames per second
+        
+    Returns:
+    --------
+    str : Path to output video file
+    """
+    import numpy as np
+    import csv
+    
+    # Check if matplotlib is available
+    try:
+        import matplotlib
+        matplotlib.use('Agg')  # Non-interactive backend
+        import matplotlib.pyplot as plt
+        from matplotlib.animation import FuncAnimation, FFMpegWriter
+    except ImportError:
+        print("  ⚠️  matplotlib not installed. Cannot generate video.")
+        return None
+    
+    # Read CSV data
+    times = []
+    thetas = []
+    zetas = []
+    
+    with open(csv_file, 'r') as f:
+        reader = csv.DictReader(f)
+        for row in reader:
+            times.append(float(row['time']))
+            thetas.append(float(row['theta']))
+            zetas.append(float(row['zeta_wall']))
+    
+    # Convert to numpy arrays and reshape
+    times = np.array(times)
+    thetas = np.array(thetas)
+    zetas = np.array(zetas)
+    
+    # Get unique times and thetas
+    unique_times = np.unique(times)
+    unique_thetas = np.unique(thetas)
+    n_theta = len(unique_thetas)
+    
+    # Reshape data
+    zeta_grid = zetas.reshape(-1, n_theta)
+    
+    # Setup figure
+    fig = plt.figure(figsize=(12, 10))
+    
+    # 3D surface plot
+    ax1 = fig.add_subplot(2, 2, (1, 3), projection='3d')
+    
+    # 2D unwrapped view
+    ax2 = fig.add_subplot(2, 2, 2)
+    
+    # Time series at specific angles
+    ax3 = fig.add_subplot(2, 2, 4)
+    
+    # Convert to Cartesian for 3D plot
+    def polar_to_cart(theta, r, z):
+        x = r * np.cos(theta)
+        y = r * np.sin(theta)
+        return x, y, z
+    
+    # Animation update function
+    def update(frame):
+        ax1.clear()
+        ax2.clear()
+        ax3.clear()
+        
+        t_idx = int(frame * len(unique_times) / (fps * duration))
+        if t_idx >= len(unique_times):
+            t_idx = len(unique_times) - 1
+        
+        t = unique_times[t_idx]
+        zeta_t = zeta_grid[t_idx, :]
+        
+        # 3D surface
+        theta_mesh = np.linspace(0, 2*np.pi, 100)
+        zeta_interp = np.interp(theta_mesh, unique_thetas, zeta_t, period=2*np.pi)
+        
+        x, y, z = polar_to_cart(theta_mesh, R, zeta_interp)
+        
+        # Plot cylinder wall
+        theta_cyl = np.linspace(0, 2*np.pi, 50)
+        z_cyl = np.linspace(zeta_interp.min(), zeta_interp.max(), 20)
+        Theta_cyl, Z_cyl = np.meshgrid(theta_cyl, z_cyl)
+        X_cyl = R * np.cos(Theta_cyl)
+        Y_cyl = R * np.sin(Theta_cyl)
+        ax1.plot_surface(X_cyl, Y_cyl, Z_cyl, alpha=0.1, color='gray')
+        
+        # Plot interface
+        ax1.plot(x, y, z, 'b-', linewidth=3, label='Interface')
+        ax1.set_xlabel('X (m)')
+        ax1.set_ylabel('Y (m)')
+        ax1.set_zlabel('ζ (m)')
+        ax1.set_title(f'Potential Flow Theory\nt = {t:.3f} s')
+        ax1.set_box_aspect([1, 1, 0.5])
+        
+        # 2D unwrapped view
+        ax2.plot(unique_thetas, zeta_t, 'b-', linewidth=2)
+        ax2.set_xlabel('θ (rad)')
+        ax2.set_ylabel('ζ (m)')
+        ax2.set_title('Unwrapped Interface')
+        ax2.grid(True, alpha=0.3)
+        ax2.set_xlim([0, 2*np.pi])
+        
+        # Time series
+        angles_to_plot = [0, np.pi/2, np.pi]
+        for angle in angles_to_plot:
+            idx = np.argmin(np.abs(unique_thetas - angle))
+            zeta_series = zeta_grid[:t_idx+1, idx]
+            ax3.plot(unique_times[:t_idx+1], zeta_series, 
+                    label=f'θ = {angle:.2f}', linewidth=2)
+        
+        ax3.set_xlabel('Time (s)')
+        ax3.set_ylabel('ζ (m)')
+        ax3.set_title('Interface Height vs Time')
+        ax3.legend()
+        ax3.grid(True, alpha=0.3)
+        ax3.set_xlim([0, duration])
+        
+        plt.tight_layout()
+    
+    # Create animation
+    n_frames = int(fps * duration)
+    anim = FuncAnimation(fig, update, frames=n_frames, interval=1000/fps)
+    
+    # Save video
+    output_file = os.path.join(case_dir, "potential_flow_animation.mp4")
+    writer = FFMpegWriter(fps=fps, bitrate=2000)
+    
+    try:
+        anim.save(output_file, writer=writer)
+        plt.close(fig)
+        return output_file
+    except Exception as e:
+        print(f"  ⚠️  Error saving video: {e}")
+        print(f"  (FFmpeg may not be installed)")
+        plt.close(fig)
+        return None
+
+
 if __name__ == "__main__":
     import argparse
     
