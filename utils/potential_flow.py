@@ -239,6 +239,7 @@ def generate_video_from_csv(csv_file, case_dir, R, duration=10.0, fps=30):
     --------
     str : Path to output video file
     """
+    import os
     import numpy as np
     import csv
     
