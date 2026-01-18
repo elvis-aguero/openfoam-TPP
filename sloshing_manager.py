@@ -179,73 +179,121 @@ def run_case_oscar(case_name, params, is_oscar):
 
 # --- Menu System ---
 
+# Human-readable labels for parameters
+PARAM_LABELS = {
+    "H": "Height (m)",
+    "D": "Diameter (m)",
+    "mesh": "Mesh Size (m)",
+    "geo": "Geometry",
+    "R": "Motion Radius (m)",
+    "freq": "Motion Frequency (Hz)",
+    "duration": "Duration (s)",
+    "dt": "Time Step (s)",
+    "ramp": "Soft Start Ramp (s, -1=auto)",
+}
+
+GEO_OPTIONS = ["flat", "cap"]
+
+def display_config(current_values, sweeps):
+    """Displays the current configuration with any overrides."""
+    print("\nCurrent Configuration:")
+    param_keys = list(DEFAULTS.keys())
+    for i, k in enumerate(param_keys):
+        label = PARAM_LABELS.get(k, k)
+        if k in sweeps:
+            val_str = str(sweeps[k])
+            print(f"  {i+1}) {label:25}: {val_str} (SWEEP)")
+        else:
+            print(f"  {i+1}) {label:25}: {current_values[k]}")
+
 def menu_build_cases(is_oscar):
     """Submenu 1: Build Case Setups"""
     print("\n--- Build Case Setups ---")
-    print("Current Defaults:")
-    param_keys = list(DEFAULTS.keys())
-    for i, k in enumerate(param_keys):
-        print(f"  {i+1}) {k:10}: {DEFAULTS[k]}")
     
-    print("\nEnter parameter number or name to override, or 'done' to finish.")
-    print("Examples: '1' or 'H'. For sweeps, use '0.1, 0.2' or '0.1:0.05:0.2'.")
-    
+    current_values = DEFAULTS.copy()
     sweeps = {}
+    param_keys = list(DEFAULTS.keys())
+    
     while True:
-        user_input = input("\nOverride: ").strip()
-        if user_input.lower() == 'done' or user_input == '':
+        display_config(current_values, sweeps)
+        print("\nOptions: Enter number to edit, 'done' to build, 'cancel' to abort.")
+        
+        user_input = input("Select: ").strip()
+        
+        if user_input.lower() == 'cancel':
+            print("Cancelled.")
+            return
+        
+        if user_input.lower() == 'done':
             break
         
-        # Check if it's a number (index)
+        # Parse selection
+        param = None
         if user_input.isdigit():
             idx = int(user_input) - 1
             if 0 <= idx < len(param_keys):
                 param = param_keys[idx]
-            else:
-                print(f"  Invalid index: {user_input}")
-                continue
         else:
-            # It's a name (case-sensitive match, then case-insensitive fallback)
-            if user_input in DEFAULTS:
-                param = user_input
-            else:
-                # Try case-insensitive
-                match = [k for k in DEFAULTS if k.lower() == user_input.lower()]
-                if match:
-                    param = match[0]
-                else:
-                    print(f"  Unknown parameter: {user_input}")
-                    continue
+            match = [k for k in DEFAULTS if k.lower() == user_input.lower()]
+            if match:
+                param = match[0]
         
-        val_str = input(f"  Enter value(s) for '{param}' (e.g., 0.1 or 0.1,0.2 or 0.1:0.05:0.2): ").strip()
+        if not param:
+            print(f"  Invalid selection: {user_input}")
+            continue
+        
+        # Special handling for 'geo' (categorical)
+        if param == 'geo':
+            print(f"\n  Select geometry:")
+            for i, opt in enumerate(GEO_OPTIONS):
+                print(f"    {i+1}) {opt}")
+            geo_input = input("  Choice (or comma-separated for sweep, e.g., '1,2'): ").strip()
+            try:
+                if ',' in geo_input:
+                    indices = [int(x.strip()) - 1 for x in geo_input.split(',')]
+                    sweeps[param] = [GEO_OPTIONS[i] for i in indices]
+                else:
+                    idx = int(geo_input) - 1
+                    current_values[param] = GEO_OPTIONS[idx]
+                    if param in sweeps:
+                        del sweeps[param]
+            except (ValueError, IndexError):
+                print("  Invalid choice.")
+            continue
+        
+        # Numeric parameters
+        label = PARAM_LABELS.get(param, param)
+        val_str = input(f"  Enter value(s) for '{label}' (single or sweep, e.g., 0.1 or 0.1:0.05:0.2): ").strip()
         try:
-            if param == 'geo':
-                sweeps[param] = [x.strip() for x in val_str.split(',')]
+            vals = parse_range(val_str)
+            if len(vals) == 1:
+                current_values[param] = vals[0]
+                if param in sweeps:
+                    del sweeps[param]
             else:
-                sweeps[param] = parse_range(val_str)
-            print(f"  ✅ {param} = {sweeps[param]}")
+                sweeps[param] = vals
         except ValueError as e:
-            print(f"  ❌ Error parsing: {e}")
+            print(f"  ❌ Error: {e}")
     
-    # Determine zip vs cartesian
+    # Confirmation
+    display_config(current_values, sweeps)
+    
+    # Build param_sets
     if not sweeps:
-        # No sweeps, just use defaults
-        param_sets = [DEFAULTS.copy()]
+        param_sets = [current_values.copy()]
     else:
         lengths = [len(v) for v in sweeps.values()]
         
         if len(set(lengths)) == 1:
-            # All same length: Zip
             print(f"\n✅ All sweep lists are length {lengths[0]}. Using ZIP mode.")
             keys = list(sweeps.keys())
             param_sets = []
             for i in range(lengths[0]):
-                p = DEFAULTS.copy()
+                p = current_values.copy()
                 for k in keys:
                     p[k] = sweeps[k][i]
                 param_sets.append(p)
         else:
-            # Different lengths: Cartesian
             total = 1
             for l in lengths:
                 total *= l
@@ -258,10 +306,16 @@ def menu_build_cases(is_oscar):
             combos = list(itertools.product(*[sweeps[k] for k in keys]))
             param_sets = []
             for combo in combos:
-                p = DEFAULTS.copy()
+                p = current_values.copy()
                 for i, k in enumerate(keys):
                     p[k] = combo[i]
                 param_sets.append(p)
+    
+    # Final confirmation
+    confirm = input(f"\nBuild {len(param_sets)} case(s)? (y/n): ").strip().lower()
+    if confirm != 'y':
+        print("Cancelled.")
+        return
     
     print(f"\nGenerating {len(param_sets)} case(s)...")
     for params in param_sets:
