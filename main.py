@@ -10,9 +10,10 @@ def ensure_dependencies():
     try:
         import numpy
         import scipy
+        import matplotlib
     except ImportError:
         print("\n⚠️  Missing dependencies detected.")
-        print("Installing required packages (numpy, scipy)...")
+        print("Installing required packages (numpy, scipy, matplotlib)...")
         
         # Try to use existing venv or create one
         venv_path = os.path.join(os.path.dirname(__file__), "sloshing")
