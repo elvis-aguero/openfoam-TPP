@@ -152,20 +152,29 @@ def estimate_resources(params):
     cell_vol = mesh_size ** 3
     n_cells = vol / cell_vol
     
-    # Simple performance model (highly approximate)
-    # Calibrated to user's 240k cells, 20s run taking >24h on 1 CPU
-    # 240k cells * 20s = 4.8M cell-seconds. If >24h, then >5 cpu-s per cell-s.
-    # We'll use a conservative estimate: 160 cpu-hours per 1M cells per 1s simulation.
-    total_cpu_hours = (n_cells / 1e6) * duration * 160
+    # Calibrated performance model
+    # User's 240k cell, 20s run took > 24h. 
+    # Let's assume it needed ~36h total (1.5 days).
+    # 36 hours / (0.24M cells * 20s) = ~7.5 cpu-hours per (Mcell-sec)
+    # We'll use 15.0 as a safe conservative factor (2x safety).
+    total_cpu_hours = (n_cells / 1e6) * duration * 15.0
     
     # Suggest CPUs (aim for ~4-8 hours wall-clock time)
     suggested_cpus = math.ceil(total_cpu_hours / 6.0)
-    suggested_cpus = max(1, min(suggested_cpus, 32)) # Cap at 32 for now
+    
+    # --- Efficiency Guard ---
+    # Don't over-parallelize. OpenFOAM sweet spot is 20k-50k cells/core.
+    # Minimum 15k cells per core to avoid communication bottlenecks.
+    max_efficient_cpus = max(1, int(n_cells / 15000))
+    suggested_cpus = min(suggested_cpus, max_efficient_cpus)
+    
+    # Cap at 32 for Oscar free tier / general stability
+    suggested_cpus = min(suggested_cpus, 32)
     
     # For power-of-two enthusiasts or scotch efficiency
     if suggested_cpus > 1:
-        suggested_cpus = 2**math.ceil(math.log2(suggested_cpus))
-        suggested_cpus = min(suggested_cpus, 32)
+        # Round to nearest power of 2 for better decomposition balance
+        suggested_cpus = 2**math.floor(math.log2(suggested_cpus))
 
     wall_clock_hours = total_cpu_hours / suggested_cpus
     # Add 50% buffer
