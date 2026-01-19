@@ -111,7 +111,7 @@ def parse_indices(s, max_idx):
 
 def get_case_name(params):
     """Generates a unique case folder name from parameters."""
-    return f"case_H{params['H']}_D{params['D']}_{params['geo']}_R{params['R']}_f{params['freq']}_m{params['mesh']}"
+    return f"case_H{params['H']}_D{params['D']}_{params['geo']}_R{params['R']}_f{params['freq']}_d{params['duration']}_m{params['mesh']}"
 
 def is_case_done(case_dir, duration):
     """Checks if the simulation for this case is complete."""
@@ -122,8 +122,8 @@ def is_case_done(case_dir, duration):
 
 def parse_case_params(case_name):
     """Extracts parameters from a case folder name."""
-    # Format: case_H{H}_D{D}_{geo}_R{R}_f{freq}_m{mesh}
-    match = re.match(r'case_H([\d.]+)_D([\d.]+)_(\w+)_R([\d.]+)_f([\d.]+)_m([\d.]+)', case_name)
+    # Format: case_H{H}_D{D}_{geo}_R{R}_f{freq}_d{duration}_m{mesh}
+    match = re.match(r'case_H([\d.]+)_D([\d.]+)_(\w+)_R([\d.]+)_f([\d.]+)_d([\d.]+)_m([\d.]+)', case_name)
     if not match:
         return DEFAULTS.copy()
     
@@ -133,11 +133,10 @@ def parse_case_params(case_name):
         "geo": match.group(3),
         "R": float(match.group(4)),
         "freq": float(match.group(5)),
-        "mesh": float(match.group(6)),
-        "duration": DEFAULTS['duration'], # Fallback
-        "dt": DEFAULTS['dt'],             # Fallback
-        "ramp": DEFAULTS['ramp'],         # Fallback
-        "n_cpus": 1                       # Default to serial unless estimated
+        "duration": float(match.group(6)),
+        "mesh": float(match.group(7)),
+        "dt": DEFAULTS['dt'],
+        "ramp": DEFAULTS['ramp']
     }
 
 def estimate_resources(params):
@@ -267,7 +266,19 @@ def run_case_local(case_name, n_cpus=1):
 
 def run_case_oscar(case_name, params, is_oscar):
     """Submits job to Slurm on Oscar."""
-    mem, time_limit, n_cells, n_cpus = estimate_resources(params)
+    mem, time_limit, n_cells, _ = estimate_resources(params)
+    
+    # Read the ACTUAL number of subdomains from the case folder
+    # This is the single source of truth for parallel runs
+    n_cpus = 1
+    decomp_path = os.path.join(case_name, "system", "decomposeParDict")
+    if os.path.exists(decomp_path):
+        with open(decomp_path, 'r') as f:
+            content = f.read()
+            match = re.search(r'numberOfSubdomains\s+(\d+);', content)
+            if match:
+                n_cpus = int(match.group(1))
+
     script_path = os.path.join(case_name, "run_simulation.slurm")
     
     header = [
@@ -668,9 +679,9 @@ def generate_potential_flow(case_dir):
     print(f"  📐 Generating potential flow prediction for {case_dir}...")
     
     # Parse parameters from case name
-    # Format: case_H{H}_D{D}_{geo}_R{R}_f{freq}_m{mesh}
+    # Format: case_H{H}_D{D}_{geo}_R{R}_f{freq}_d{duration}_m{mesh}
     import re
-    match = re.match(r'case_H([\d.]+)_D([\d.]+)_(\w+)_R([\d.]+)_f([\d.]+)_m([\d.]+)', case_dir)
+    match = re.match(r'case_H([\d.]+)_D([\d.]+)_(\w+)_R([\d.]+)_f([\d.]+)_d([\d.]+)_m([\d.]+)', case_dir)
     if not match:
         print(f"  ❌ Could not parse parameters from case name: {case_dir}")
         return False
@@ -680,7 +691,8 @@ def generate_potential_flow(case_dir):
     geo = match.group(3)
     R_orbital = float(match.group(4))
     freq = float(match.group(5))
-    mesh_size = float(match.group(6))  # Not used for PT, but parsed for completeness
+    duration = float(match.group(6))
+    mesh_size = float(match.group(7))
     
     # Cylinder radius
     R_cyl = D / 2.0
