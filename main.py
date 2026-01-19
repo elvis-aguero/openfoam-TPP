@@ -59,6 +59,7 @@ DEFAULTS = {
     "duration": 10.0,
     "dt": 0.001,
     "ramp": -1,
+    "n_cpus": 1,
 }
 
 # --- Utility Functions ---
@@ -110,7 +111,7 @@ def parse_indices(s, max_idx):
 
 def get_case_name(params):
     """Generates a unique case folder name from parameters."""
-    return f"case_H{params['H']}_D{params['D']}_{params['geo']}_R{params['R']}_f{params['freq']}"
+    return f"case_H{params['H']}_D{params['D']}_{params['geo']}_R{params['R']}_f{params['freq']}_m{params['mesh']}"
 
 def is_case_done(case_dir, duration):
     """Checks if the simulation for this case is complete."""
@@ -119,18 +120,67 @@ def is_case_done(case_dir, duration):
     final_path = os.path.join(case_dir, final_time_str, "alpha.water")
     return os.path.exists(final_path)
 
-def estimate_resources(h, d, mesh_size):
-    """Estimates required memory and time based on domain volume."""
+def parse_case_params(case_name):
+    """Extracts parameters from a case folder name."""
+    # Format: case_H{H}_D{D}_{geo}_R{R}_f{freq}_m{mesh}
+    match = re.match(r'case_H([\d.]+)_D([\d.]+)_(\w+)_R([\d.]+)_f([\d.]+)_m([\d.]+)', case_name)
+    if not match:
+        return DEFAULTS.copy()
+    
+    return {
+        "H": float(match.group(1)),
+        "D": float(match.group(2)),
+        "geo": match.group(3),
+        "R": float(match.group(4)),
+        "freq": float(match.group(5)),
+        "mesh": float(match.group(6)),
+        "duration": DEFAULTS['duration'], # Fallback
+        "dt": DEFAULTS['dt'],             # Fallback
+        "ramp": DEFAULTS['ramp'],         # Fallback
+        "n_cpus": 1                       # Default to serial unless estimated
+    }
+
+def estimate_resources(params):
+    """
+    Estimates required CPUs, memory, and wall-clock time.
+    Model: ~160 cpu-hours per 1M cells per 1s simulation.
+    """
+    h, d, mesh_size = params['H'], params['D'], params['mesh']
+    duration = params['duration']
+    
     vol = math.pi * ((d / 2.0)**2) * h
     cell_vol = mesh_size ** 3
     n_cells = vol / cell_vol
     
-    if n_cells < 100000:
-        return "8G", "24:00:00", n_cells
-    elif n_cells < 1000000:
-        return "32G", "48:00:00", n_cells
-    else:
-        return "64G", "72:00:00", n_cells
+    # Simple performance model (highly approximate)
+    # Calibrated to user's 240k cells, 20s run taking >24h on 1 CPU
+    # 240k cells * 20s = 4.8M cell-seconds. If >24h, then >5 cpu-s per cell-s.
+    # We'll use a conservative estimate: 160 cpu-hours per 1M cells per 1s simulation.
+    total_cpu_hours = (n_cells / 1e6) * duration * 160
+    
+    # Suggest CPUs (aim for ~4-8 hours wall-clock time)
+    suggested_cpus = math.ceil(total_cpu_hours / 6.0)
+    suggested_cpus = max(1, min(suggested_cpus, 32)) # Cap at 32 for now
+    
+    # For power-of-two enthusiasts or scotch efficiency
+    if suggested_cpus > 1:
+        suggested_cpus = 2**math.ceil(math.log2(suggested_cpus))
+        suggested_cpus = min(suggested_cpus, 32)
+
+    wall_clock_hours = total_cpu_hours / suggested_cpus
+    # Add 50% buffer
+    wall_clock_hours *= 1.5
+    
+    # Format for Slurm
+    h_str = f"{int(wall_clock_hours):02d}"
+    m_str = f"{int((wall_clock_hours % 1) * 60):02d}"
+    time_limit = f"{h_str}:{m_str}:00"
+    
+    # Memory: ~2GB per 100k cells
+    mem_gb = math.ceil((n_cells / 1e5) * 2.0)
+    mem_gb = max(8, min(mem_gb, 128))
+    
+    return f"{mem_gb}G", time_limit, n_cells, suggested_cpus
 
 # --- Core Actions ---
 
@@ -179,17 +229,36 @@ def setup_case(params):
         ], cwd=cwd, check=True, capture_output=True)
     else:
         print("  ❌ gmsh not found in PATH. Cannot generate mesh.")
+
+    # Parallel Setup (Inject numberOfSubdomains)
+    if params.get('n_cpus', 1) > 1:
+        decomp_path = os.path.join(cwd, "system", "decomposeParDict")
+        if os.path.exists(decomp_path):
+            with open(decomp_path, 'r') as f:
+                content = f.read()
+            content = re.sub(r'numberOfSubdomains\s+\d+;', f'numberOfSubdomains {params["n_cpus"]};', content)
+            with open(decomp_path, 'w') as f:
+                f.write(content)
+
+    # Update controlDict endTime
+    control_path = os.path.join(cwd, "system", "controlDict")
+    if os.path.exists(control_path):
+        with open(control_path, 'r') as f:
+            content = f.read()
+        content = re.sub(r'endTime\s+[\d.]+;', f'endTime {params["duration"]};', content)
+        with open(control_path, 'w') as f:
+            f.write(content)
         
     return case_name
 
-def run_case_local(case_name):
+def run_case_local(case_name, n_cpus=1):
     """Runs simulation locally."""
-    print(f"  🏃 Running {case_name}...")
-    subprocess.run(["make", "-C", case_name, "run"], check=True)
+    print(f"  🏃 Running {case_name} (CPUs={n_cpus})...")
+    subprocess.run(["make", "-C", case_name, "run", f"N_CPUS={n_cpus}"], check=True)
 
 def run_case_oscar(case_name, params, is_oscar):
     """Submits job to Slurm on Oscar."""
-    mem, time_limit, n_cells = estimate_resources(params['H'], params['D'], params['mesh'])
+    mem, time_limit, n_cells, n_cpus = estimate_resources(params)
     script_path = os.path.join(case_name, "run_simulation.slurm")
     
     header = [
@@ -197,7 +266,7 @@ def run_case_oscar(case_name, params, is_oscar):
         f"#SBATCH -J {case_name}",
         "#SBATCH -p batch",
         "#SBATCH -N 1",
-        "#SBATCH -n 1",
+        f"#SBATCH -n {n_cpus}",
         f"#SBATCH --time={time_limit}",
         f"#SBATCH --mem={mem}",
         f"#SBATCH -o {case_name}/slurm.%j.out",
@@ -207,14 +276,14 @@ def run_case_oscar(case_name, params, is_oscar):
         "export OMP_NUM_THREADS=1",
         "",
         f"echo 'Case: {case_name}'",
-        f"make -C {case_name} run OSCAR=1",
+        f"make -C {case_name} run OSCAR=1 N_CPUS={n_cpus}",
         "echo 'End: $(date)'"
     ]
     
     with open(script_path, "w") as f:
         f.write("\n".join(header))
     
-    print(f"  🚀 Submitting {case_name} ({mem}, {time_limit})...")
+    print(f"  🚀 Submitting {case_name} ({n_cpus} CPUs, {mem}, {time_limit})...")
     subprocess.run(["sbatch", script_path], check=True)
 
 # --- Menu System ---
@@ -230,6 +299,7 @@ PARAM_LABELS = {
     "duration": "Duration (s)",
     "dt": "Time Step (s)",
     "ramp": "Soft Start Ramp (s, -1=auto)",
+    "n_cpus": "Parallel CPUs (1=serial)",
 }
 
 GEO_OPTIONS = ["flat", "cap"]
@@ -351,8 +421,29 @@ def menu_build_cases(is_oscar):
                     p[k] = combo[i]
                 param_sets.append(p)
     
+    # Final Case Review & Resource Estimation
+    print("\n" + "="*40)
+    print("   Final Review & Resource Estimation")
+    print("="*40)
+    
+    # Calculate for the first case in param_sets to show representative estimate
+    sample_params = param_sets[0]
+    mem, time_limit, n_cells, suggested_cpus = estimate_resources(sample_params)
+    
+    print(f"Total Cases to Build: {len(param_sets)}")
+    print(f"Estimated Cells per Case: {int(n_cells):,}")
+    print(f"Suggested Wall-Clock Time: {time_limit}")
+    print(f"Suggested Parallelization: {suggested_cpus} CPUs")
+    
+    if suggested_cpus > 1 and current_values['n_cpus'] == 1:
+        print(f"\n💡 [RECOMMENDED] Multi-processing is highly recommended for this cell count.")
+        use_multi = input(f"   Enable parallel execution with {suggested_cpus} CPUs? (y/n): ").strip().lower()
+        if use_multi == 'y':
+            for p in param_sets:
+                p['n_cpus'] = suggested_cpus
+    
     # Final confirmation
-    confirm = input(f"\nBuild {len(param_sets)} case(s)? (y/n): ").strip().lower()
+    confirm = input(f"\nConfirm building {len(param_sets)} case(s)? (y/n): ").strip().lower()
     if confirm != 'y':
         print("Cancelled.")
         return
@@ -395,12 +486,14 @@ def menu_run_cases(is_oscar):
     
     for i in indices:
         case_name = cases[i]
-        params = DEFAULTS.copy()  # Ideally, parse from folder name or config
+        params = parse_case_params(case_name)
         
         if is_oscar:
             run_case_oscar(case_name, params, is_oscar)
         elif has_openfoam:
-            run_case_local(case_name)
+            # Estimate resources to get n_cpus for local run
+            _, _, _, n_cpus = estimate_resources(params)
+            run_case_local(case_name, n_cpus=n_cpus)
         else:
             print(f"  ❌ OpenFOAM not installed. Cannot run {case_name} locally.")
 
@@ -566,9 +659,9 @@ def generate_potential_flow(case_dir):
     print(f"  📐 Generating potential flow prediction for {case_dir}...")
     
     # Parse parameters from case name
-    # Format: case_H{H}_D{D}_{geo}_R{R}_f{freq}
+    # Format: case_H{H}_D{D}_{geo}_R{R}_f{freq}_m{mesh}
     import re
-    match = re.match(r'case_H([\d.]+)_D([\d.]+)_(\w+)_R([\d.]+)_f([\d.]+)', case_dir)
+    match = re.match(r'case_H([\d.]+)_D([\d.]+)_(\w+)_R([\d.]+)_f([\d.]+)_m([\d.]+)', case_dir)
     if not match:
         print(f"  ❌ Could not parse parameters from case name: {case_dir}")
         return False
@@ -578,6 +671,7 @@ def generate_potential_flow(case_dir):
     geo = match.group(3)
     R_orbital = float(match.group(4))
     freq = float(match.group(5))
+    mesh_size = float(match.group(6))  # Not used for PT, but parsed for completeness
     
     # Cylinder radius
     R_cyl = D / 2.0

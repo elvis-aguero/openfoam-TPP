@@ -67,11 +67,19 @@ ifeq ($(OSCAR),1)
 endif
 
 OF_PREFIX ?= 
+N_CPUS ?= 1
 run:
 	# commands to be run in OpenFOAM environment
 	$(OF_PREFIX) gmshToFoam cylinder.msh
 	$(OF_PREFIX) setFields
-	$(OF_PREFIX) foamRun
+	@if [ $(N_CPUS) -gt 1 ]; then \
+		echo "Running in parallel on $(N_CPUS) cores..."; \
+		$(OF_PREFIX) decomposePar -force; \
+		$(OF_PREFIX) mpirun -np $(N_CPUS) foamRun -parallel; \
+	else \
+		echo "Running in serial..."; \
+		$(OF_PREFIX) foamRun; \
+	fi
 
 clean:
 	rm -f cylinder.geo cylinder.msh

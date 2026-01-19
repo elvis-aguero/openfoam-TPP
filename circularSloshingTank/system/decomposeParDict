@@ -14,19 +14,13 @@ FoamFile
 }
 // * * * * * * * * * * * * * * * * * * * * * * * * * * * * * * * * * * * * * //
 
-numberOfSubdomains 16;
+numberOfSubdomains 1; // Overwritten by main.py
 
-method          hierarchical;
+method          scotch;
 
-simpleCoeffs
+scotchCoeffs
 {
-    n               (2 2 1);
-}
-
-hierarchicalCoeffs
-{
-    n               (4 2 2);
-    order           xyz;
+    // n               (1 1 1);
 }
 
 manualCoeffs
