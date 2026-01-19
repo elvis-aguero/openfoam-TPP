@@ -76,6 +76,10 @@ run:
 		echo "Running in parallel on $(N_CPUS) cores..."; \
 		$(OF_PREFIX) decomposePar -force; \
 		$(OF_PREFIX) mpirun -np $(N_CPUS) foamRun -parallel; \
+		echo "Reconstructing parallel results..."; \
+		$(OF_PREFIX) reconstructPar; \
+		echo "Cleaning up processor directories..."; \
+		rm -rf processor*; \
 	else \
 		echo "Running in serial..."; \
 		$(OF_PREFIX) foamRun; \
