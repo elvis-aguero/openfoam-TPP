@@ -291,6 +291,8 @@ def run_case_oscar(case_name, params, is_oscar):
         f"#SBATCH --mem={mem}",
         f"#SBATCH -o {case_name}/slurm.%j.out",
         f"#SBATCH -e {case_name}/slurm.%j.err",
+        "#SBATCH --mail-type=END",
+        "#SBATCH --mail-user=elvis_vera@brown.edu",
         "",
         "set -euo pipefail",
         "export OMP_NUM_THREADS=1",
