@@ -1,0 +1,73 @@
+## SLURM PROLOG ###############################################################
+##    Job ID : 94063
+##  Job Name : post_interface_case_H0.208_D0.2_flat_R0.004_f1.88_d20.0_m0.009
+##  Nodelist : node2341
+##      CPUs : 1
+##  Mem/Node : 8192 MB
+## Directory : /oscar/data/dharri15/eaguerov/examples/openfoam/openfoam-TPP
+##   Job Started : Tue Jan 20 10:08:03 AM EST 2026
+###############################################################################
+Post-processing: interface on case_H0.208_D0.2_flat_R0.004_f1.88_d20.0_m0.009
+Requirement already satisfied: numpy>=1.24.0 in ./sloshing/lib/python3.13/site-packages (from -r /oscar/data/dharri15/eaguerov/examples/openfoam/openfoam-TPP/requirements.txt (line 2)) (2.4.1)
+Requirement already satisfied: scipy>=1.10.0 in ./sloshing/lib/python3.13/site-packages (from -r /oscar/data/dharri15/eaguerov/examples/openfoam/openfoam-TPP/requirements.txt (line 3)) (1.17.0)
+Requirement already satisfied: matplotlib>=3.7.0 in ./sloshing/lib/python3.13/site-packages (from -r /oscar/data/dharri15/eaguerov/examples/openfoam/openfoam-TPP/requirements.txt (line 4)) (3.10.8)
+Requirement already satisfied: pyvista>=0.43.0 in ./sloshing/lib/python3.13/site-packages (from -r /oscar/data/dharri15/eaguerov/examples/openfoam/openfoam-TPP/requirements.txt (line 5)) (0.46.5)
+Requirement already satisfied: imageio>=2.33.0 in ./sloshing/lib/python3.13/site-packages (from -r /oscar/data/dharri15/eaguerov/examples/openfoam/openfoam-TPP/requirements.txt (line 6)) (2.37.2)
+Requirement already satisfied: imageio-ffmpeg>=0.4.9 in ./sloshing/lib/python3.13/site-packages (from -r /oscar/data/dharri15/eaguerov/examples/openfoam/openfoam-TPP/requirements.txt (line 7)) (0.6.0)
+Requirement already satisfied: h5py>=3.10.0 in ./sloshing/lib/python3.13/site-packages (from -r /oscar/data/dharri15/eaguerov/examples/openfoam/openfoam-TPP/requirements.txt (line 8)) (3.15.1)
+Requirement already satisfied: contourpy>=1.0.1 in ./sloshing/lib/python3.13/site-packages (from matplotlib>=3.7.0->-r /oscar/data/dharri15/eaguerov/examples/openfoam/openfoam-TPP/requirements.txt (line 4)) (1.3.3)
+Requirement already satisfied: cycler>=0.10 in ./sloshing/lib/python3.13/site-packages (from matplotlib>=3.7.0->-r /oscar/data/dharri15/eaguerov/examples/openfoam/openfoam-TPP/requirements.txt (line 4)) (0.12.1)
+Requirement already satisfied: fonttools>=4.22.0 in ./sloshing/lib/python3.13/site-packages (from matplotlib>=3.7.0->-r /oscar/data/dharri15/eaguerov/examples/openfoam/openfoam-TPP/requirements.txt (line 4)) (4.61.1)
+Requirement already satisfied: kiwisolver>=1.3.1 in ./sloshing/lib/python3.13/site-packages (from matplotlib>=3.7.0->-r /oscar/data/dharri15/eaguerov/examples/openfoam/openfoam-TPP/requirements.txt (line 4)) (1.4.9)
+Requirement already satisfied: packaging>=20.0 in ./sloshing/lib/python3.13/site-packages (from matplotlib>=3.7.0->-r /oscar/data/dharri15/eaguerov/examples/openfoam/openfoam-TPP/requirements.txt (line 4)) (25.0)
+Requirement already satisfied: pillow>=8 in ./sloshing/lib/python3.13/site-packages (from matplotlib>=3.7.0->-r /oscar/data/dharri15/eaguerov/examples/openfoam/openfoam-TPP/requirements.txt (line 4)) (12.1.0)
+Requirement already satisfied: pyparsing>=3 in ./sloshing/lib/python3.13/site-packages (from matplotlib>=3.7.0->-r /oscar/data/dharri15/eaguerov/examples/openfoam/openfoam-TPP/requirements.txt (line 4)) (3.3.1)
+Requirement already satisfied: python-dateutil>=2.7 in ./sloshing/lib/python3.13/site-packages (from matplotlib>=3.7.0->-r /oscar/data/dharri15/eaguerov/examples/openfoam/openfoam-TPP/requirements.txt (line 4)) (2.9.0.post0)
+Requirement already satisfied: pooch in ./sloshing/lib/python3.13/site-packages (from pyvista>=0.43.0->-r /oscar/data/dharri15/eaguerov/examples/openfoam/openfoam-TPP/requirements.txt (line 5)) (1.8.2)
+Requirement already satisfied: scooby>=0.5.1 in ./sloshing/lib/python3.13/site-packages (from pyvista>=0.43.0->-r /oscar/data/dharri15/eaguerov/examples/openfoam/openfoam-TPP/requirements.txt (line 5)) (0.11.0)
+Requirement already satisfied: typing-extensions>=4.10 in ./sloshing/lib/python3.13/site-packages (from pyvista>=0.43.0->-r /oscar/data/dharri15/eaguerov/examples/openfoam/openfoam-TPP/requirements.txt (line 5)) (4.15.0)
+Requirement already satisfied: vtk!=9.4.0 in ./sloshing/lib/python3.13/site-packages (from pyvista>=0.43.0->-r /oscar/data/dharri15/eaguerov/examples/openfoam/openfoam-TPP/requirements.txt (line 5)) (9.5.2)
+Requirement already satisfied: six>=1.5 in ./sloshing/lib/python3.13/site-packages (from python-dateutil>=2.7->matplotlib>=3.7.0->-r /oscar/data/dharri15/eaguerov/examples/openfoam/openfoam-TPP/requirements.txt (line 4)) (1.17.0)
+Requirement already satisfied: platformdirs>=2.5.0 in ./sloshing/lib/python3.13/site-packages (from pooch->pyvista>=0.43.0->-r /oscar/data/dharri15/eaguerov/examples/openfoam/openfoam-TPP/requirements.txt (line 5)) (4.5.1)
+Requirement already satisfied: requests>=2.19.0 in ./sloshing/lib/python3.13/site-packages (from pooch->pyvista>=0.43.0->-r /oscar/data/dharri15/eaguerov/examples/openfoam/openfoam-TPP/requirements.txt (line 5)) (2.32.5)
+Requirement already satisfied: charset_normalizer<4,>=2 in ./sloshing/lib/python3.13/site-packages (from requests>=2.19.0->pooch->pyvista>=0.43.0->-r /oscar/data/dharri15/eaguerov/examples/openfoam/openfoam-TPP/requirements.txt (line 5)) (3.4.4)
+Requirement already satisfied: idna<4,>=2.5 in ./sloshing/lib/python3.13/site-packages (from requests>=2.19.0->pooch->pyvista>=0.43.0->-r /oscar/data/dharri15/eaguerov/examples/openfoam/openfoam-TPP/requirements.txt (line 5)) (3.11)
+Requirement already satisfied: urllib3<3,>=1.21.1 in ./sloshing/lib/python3.13/site-packages (from requests>=2.19.0->pooch->pyvista>=0.43.0->-r /oscar/data/dharri15/eaguerov/examples/openfoam/openfoam-TPP/requirements.txt (line 5)) (2.6.3)
+Requirement already satisfied: certifi>=2017.4.17 in ./sloshing/lib/python3.13/site-packages (from requests>=2.19.0->pooch->pyvista>=0.43.0->-r /oscar/data/dharri15/eaguerov/examples/openfoam/openfoam-TPP/requirements.txt (line 5)) (2026.1.4)
+  📊 Extracting interface for case_H0.208_D0.2_flat_R0.004_f1.88_d20.0_m0.009 using PyVista...
+  Processing 336 timesteps...
+    Processed 10/336
+    Processed 20/336
+    Processed 30/336
+    Processed 40/336
+    Processed 50/336
+    Processed 60/336
+    Processed 70/336
+    Processed 80/336
+    Processed 90/336
+    Processed 100/336
+    Processed 110/336
+    Processed 120/336
+    Processed 130/336
+    Processed 140/336
+    Processed 150/336
+    Processed 160/336
+    Processed 170/336
+    Processed 180/336
+    Processed 190/336
+    Processed 200/336
+    Processed 210/336
+    Processed 220/336
+    Processed 230/336
+    Processed 240/336
+    Processed 250/336
+    Processed 260/336
+    Processed 270/336
+    Processed 280/336
+    Processed 290/336
+    Processed 300/336
+    Processed 310/336
+    Processed 320/336
+    Processed 330/336
+  ✅ Interface extracted: results/case_H0.208_D0.2_flat_R0.004_f1.88_d20.0_m0.009/interface/
+End: $(date)

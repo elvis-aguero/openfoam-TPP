@@ -1,0 +1,47 @@
+## SLURM PROLOG ###############################################################
+##    Job ID : 95386
+##  Job Name : post_video_case_H0.208_D0.2_flat_R0.004_f1.88_d20.0_m0.009
+##  Nodelist : node2340
+##      CPUs : 1
+##  Mem/Node : 8192 MB
+## Directory : /oscar/data/dharri15/eaguerov/examples/openfoam/openfoam-TPP
+##   Job Started : Tue Jan 20 11:03:09 AM EST 2026
+###############################################################################
+Post-processing: video on case_H0.208_D0.2_flat_R0.004_f1.88_d20.0_m0.009
+  🎬 Generating video for case_H0.208_D0.2_flat_R0.004_f1.88_d20.0_m0.009 using PyVista...
+  Found 336 timesteps.
+    Renderer frame 10/336
+    Renderer frame 20/336
+    Renderer frame 30/336
+    Renderer frame 40/336
+    Renderer frame 50/336
+    Renderer frame 60/336
+    Renderer frame 70/336
+    Renderer frame 80/336
+    Renderer frame 90/336
+    Renderer frame 100/336
+    Renderer frame 110/336
+    Renderer frame 120/336
+    Renderer frame 130/336
+    Renderer frame 140/336
+    Renderer frame 150/336
+    Renderer frame 160/336
+    Renderer frame 170/336
+    Renderer frame 180/336
+    Renderer frame 190/336
+    Renderer frame 200/336
+    Renderer frame 210/336
+    Renderer frame 220/336
+    Renderer frame 230/336
+    Renderer frame 240/336
+    Renderer frame 250/336
+    Renderer frame 260/336
+    Renderer frame 270/336
+    Renderer frame 280/336
+    Renderer frame 290/336
+    Renderer frame 300/336
+    Renderer frame 310/336
+    Renderer frame 320/336
+    Renderer frame 330/336
+  ✅ Video saved: case_H0.208_D0.2_flat_R0.004_f1.88_d20.0_m0.009/animation.mp4
+End: $(date)

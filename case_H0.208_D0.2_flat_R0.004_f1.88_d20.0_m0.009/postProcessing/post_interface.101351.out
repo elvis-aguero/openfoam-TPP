@@ -1,0 +1,54 @@
+## SLURM PROLOG ###############################################################
+##    Job ID : 101351
+##  Job Name : post_interface_case_H0.208_D0.2_flat_R0.004_f1.88_d20.0_m0.009
+##  Nodelist : node2341
+##      CPUs : 1
+##  Mem/Node : 8192 MB
+## Directory : /oscar/data/dharri15/eaguerov/examples/openfoam/openfoam-TPP
+##   Job Started : Tue Jan 20 03:05:37 PM EST 2026
+###############################################################################
+Post-processing: interface on case_H0.208_D0.2_flat_R0.004_f1.88_d20.0_m0.009
+  📊 Extracting interface for case_H0.208_D0.2_flat_R0.004_f1.88_d20.0_m0.009 using PyVista...
+  Processing 401 timesteps...
+    Processed 10/401
+    Processed 20/401
+    Processed 30/401
+    Processed 40/401
+    Processed 50/401
+    Processed 60/401
+    Processed 70/401
+    Processed 80/401
+    Processed 90/401
+    Processed 100/401
+    Processed 110/401
+    Processed 120/401
+    Processed 130/401
+    Processed 140/401
+    Processed 150/401
+    Processed 160/401
+    Processed 170/401
+    Processed 180/401
+    Processed 190/401
+    Processed 200/401
+    Processed 210/401
+    Processed 220/401
+    Processed 230/401
+    Processed 240/401
+    Processed 250/401
+    Processed 260/401
+    Processed 270/401
+    Processed 280/401
+    Processed 290/401
+    Processed 300/401
+    Processed 310/401
+    Processed 320/401
+    Processed 330/401
+    Processed 340/401
+    Processed 350/401
+    Processed 360/401
+    Processed 370/401
+    Processed 380/401
+    Processed 390/401
+    Processed 400/401
+  ✅ Interface extracted: case_H0.208_D0.2_flat_R0.004_f1.88_d20.0_m0.009/postProcessing/interface/
+End: $(date)
