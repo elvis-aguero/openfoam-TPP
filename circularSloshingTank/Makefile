@@ -85,6 +85,19 @@ run:
 		$(OF_PREFIX) foamRun; \
 	fi
 
+resume:
+	@if [ $(N_CPUS) -gt 1 ]; then \
+		echo "Resuming in parallel on $(N_CPUS) cores..."; \
+		$(OF_PREFIX) mpirun -np $(N_CPUS) foamRun -parallel; \
+		echo "Reconstructing parallel results..."; \
+		$(OF_PREFIX) reconstructPar; \
+		echo "Cleaning up processor directories..."; \
+		rm -rf processor*; \
+	else \
+		echo "Resuming in serial..."; \
+		$(OF_PREFIX) foamRun; \
+	fi
+
 clean:
 	rm -f cylinder.geo cylinder.msh
 	rm -f constant/6DoF.dat

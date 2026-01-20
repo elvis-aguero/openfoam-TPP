@@ -11,9 +11,11 @@ def ensure_dependencies():
         import numpy
         import scipy
         import matplotlib
+        import pyvista
+        import imageio
     except ImportError:
         print("\n⚠️  Missing dependencies detected.")
-        print("Installing required packages (numpy, scipy, matplotlib)...")
+        print("Installing required packages (numpy, scipy, matplotlib, pyvista, imageio)...")
         
         # Try to use existing venv or create one
         venv_path = os.path.join(os.path.dirname(__file__), "sloshing")
@@ -155,8 +157,8 @@ def estimate_resources(params):
     # User's 240k cell, 20s run took > 24h. 
     # Let's assume it needed ~36h total (1.5 days).
     # 36 hours / (0.24M cells * 20s) = ~7.5 cpu-hours per (Mcell-sec)
-    # We'll use 15.0 as a safe conservative factor (2x safety).
-    total_cpu_hours = (n_cells / 1e6) * duration * 15.0
+    # We'll use 30.0 as a safe conservative factor based on recent observations.
+    total_cpu_hours = (n_cells / 1e6) * duration * 30.0
     
     # Suggest CPUs (aim for ~4-8 hours wall-clock time)
     suggested_cpus = math.ceil(total_cpu_hours / 6.0)
@@ -176,8 +178,8 @@ def estimate_resources(params):
         suggested_cpus = 2**math.floor(math.log2(suggested_cpus))
 
     wall_clock_hours = total_cpu_hours / suggested_cpus
-    # Add 50% buffer
-    wall_clock_hours *= 1.5
+    # Add 100% buffer (2x) to account for variability & I/O
+    wall_clock_hours *= 2.0
     
     # Format for Slurm
     h_str = f"{int(wall_clock_hours):02d}"
@@ -293,12 +295,27 @@ def run_case_oscar(case_name, params, is_oscar):
         f"#SBATCH -e {case_name}/slurm.%j.err",
         "#SBATCH --mail-type=END",
         "#SBATCH --mail-user=elvis_vera@brown.edu",
-        "",
+        ""
+    ]
+    
+    # Add module loads
+    if CLUSTER_MODULES:
+        header.append(f"module load {' '.join(CLUSTER_MODULES)}")
+        header.append("")
+    
+    header.extend([
         "set -euo pipefail",
         "export OMP_NUM_THREADS=1",
         "",
         f"echo 'Case: {case_name}'",
-        f"make -C {case_name} run OSCAR=1 N_CPUS={n_cpus}",
+        "# Check if we are resuming (processor directories exist)",
+        "if [ -d 'processor0' ]; then",
+        "    echo 'Found existing processor directories. Resuming simulation...'",
+        f"    make -C {case_name} resume OSCAR=1 N_CPUS={n_cpus}",
+        "else",
+        "    echo 'Starting fresh simulation...'",
+        f"    make -C {case_name} run OSCAR=1 N_CPUS={n_cpus}",
+        "fi",
         "echo 'End: $(date)'"
     ]
     
@@ -520,157 +537,174 @@ def menu_run_cases(is_oscar):
             print(f"  ❌ OpenFOAM not installed. Cannot run {case_name} locally.")
 
 def generate_video(case_dir):
-    """Generates a video from OpenFOAM results using ParaView."""
-    print(f"  🎬 Generating video for {case_dir}...")
+    """Generates a video from OpenFOAM results using PyVista."""
+    import pyvista as pv
+    import imageio
+    import numpy as np
     
-    # Create ParaView Python script
-    script_content = f"""
-from paraview.simple import *
+    # Try to launch XVFB for headless rendering if available
+    try:
+        pv.start_xvfb()
+    except OSError:
+        pass # Might fail if not on Linux or xvfb not installed, but pyvista might still work with osmesa
 
-# Load case
-case = OpenFOAMReader(FileName='{case_dir}/case.foam')
-case.MeshRegions = ['internalMesh']
-case.CellArrays = ['alpha.water', 'U', 'p_rgh']
-
-# Get animation scene
-animationScene = GetAnimationScene()
-animationScene.UpdateAnimationUsingDataTimeSteps()
-
-# Create render view
-renderView = CreateView('RenderView')
-renderView.ViewSize = [1920, 1080]
-renderView.Background = [1, 1, 1]
-
-# Show data
-display = Show(case, renderView)
-display.Representation = 'Surface'
-display.ColorArrayName = ['CELLS', 'alpha.water']
-
-# Color by alpha.water
-ColorBy(display, ('CELLS', 'alpha.water'))
-alphaLUT = GetColorTransferFunction('alpha.water')
-alphaLUT.RescaleTransferFunction(0.0, 1.0)
-alphaLUT.ApplyPreset('Cool to Warm', True)
-
-# Camera setup
-renderView.ResetCamera()
-renderView.CameraPosition = [0.0, -0.15, 0.1]
-renderView.CameraFocalPoint = [0.0, 0.0, 0.05]
-renderView.CameraViewUp = [0.0, 0.0, 1.0]
-
-# Save animation
-SaveAnimation('{case_dir}/animation.mp4', renderView, 
-              ImageResolution=[1920, 1080],
-              FrameRate=30)
-
-print("Video saved to {case_dir}/animation.mp4")
-"""
+    print(f"  🎬 Generating video for {case_dir} using PyVista...")
     
-    script_path = os.path.join(case_dir, "render_video.py")
-    with open(script_path, "w") as f:
-        f.write(script_content)
+    foam_file = os.path.join(case_dir, "case.foam")
+    if not os.path.exists(foam_file):
+        # Create empty .foam file if it doesn't exist (PyVista needs it)
+        with open(foam_file, 'w') as f:
+            pass
+            
+    try:
+        reader = pv.POpenFOAMReader(foam_file)
+        # Force reading cell data
+        reader.cell_to_point_creation = False 
+    except Exception as e:
+         print(f"  ❌ Error loading OpenFOAM case: {e}")
+         return False
+
+    # Get Time Values
+    try:
+        time_values = reader.time_values
+    except AttributeError:
+        # Fallback if time_values not directly accessible
+        time_values = reader.reader.GetTimeValues()
+        
+    print(f"  Found {len(time_values)} timesteps.")
     
-    # Run pvpython
-    pvpython = shutil.which("pvpython")
-    if not pvpython:
-        print(f"  ❌ pvpython not found. Install ParaView to generate videos.")
-        return False
+    # Setup Plotter (Off-screen)
+    plotter = pv.Plotter(off_screen=True, window_size=[1920, 1080])
+    
+    # Setup camera
+    plotter.camera_position = [
+        (0.0, -0.15, 0.1),  # Position
+        (0.0, 0.0, 0.05),   # Focal point
+        (0.0, 0.0, 1.0)     # View up
+    ]
+    
+    video_path = os.path.join(case_dir, "animation.mp4")
     
     try:
-        subprocess.run([pvpython, script_path], cwd=case_dir, check=True, 
-                      capture_output=True, text=True)
-        print(f"  ✅ Video saved: {case_dir}/animation.mp4")
-        return True
-    except subprocess.CalledProcessError as e:
-        print(f"  ❌ Error generating video: {e.stderr}")
-        return False
+        with imageio.get_writer(video_path, fps=30) as writer:
+            for i, t in enumerate(time_values):
+                reader.set_active_time_value(t)
+                mesh = reader.read()
+                
+                # Check for datasets
+                if mesh.n_blocks > 0:
+                    # Usually block 0 is internalMesh
+                    internal_mesh = mesh[0]
+                    
+                    # Add data to plotter
+                    plotter.clear()
+                    
+                    # We want to visualize alpha.water
+                    # PyVista/VTK reads OpenFOAM data differently depending on the reader version
+                    # Often 'alpha.water' is in cell_data
+                    
+                    if 'alpha.water' in internal_mesh.cell_data:
+                        plotter.add_mesh(internal_mesh, scalars='alpha.water', cmap='coolwarm', 
+                                        clim=[0, 1], show_edges=False)
+                    else:
+                        plotter.add_mesh(internal_mesh, color='lightblue', show_edges=True)
+                        
+                    plotter.add_text(f"Time: {t:.2f} s", position='upper_left', font_size=12, color='black')
+                    
+                    # Render
+                    img = plotter.screenshot(return_img=True)
+                    writer.append_data(img)
+                
+                if (i+1) % 10 == 0:
+                    print(f"    Renderer frame {i+1}/{len(time_values)}")
 
+        print(f"  ✅ Video saved: {video_path}")
+        return True
+        
+    except Exception as e:
+        print(f"  ❌ Error rendering video: {e}")
+        import traceback
+        traceback.print_exc()
+        return False
+        
 def extract_interface(case_dir):
-    """Extracts the water-air interface (alpha.water=0.5) for all timesteps."""
-    print(f"  📊 Extracting interface for {case_dir}...")
+    """Extracts the water-air interface (alpha.water=0.5) using PyVista."""
+    import pyvista as pv
+    import numpy as np
     
-    # Create ParaView Python script
-    script_content = f"""
-from paraview.simple import *
-import os
-
-# Load case
-case = OpenFOAMReader(FileName='{case_dir}/case.foam')
-case.MeshRegions = ['internalMesh']
-case.CellArrays = ['alpha.water']
-
-# Get timesteps
-timesteps = case.TimestepValues
-print(f"Found {{len(timesteps)}} timesteps")
-
-# Create output directory
-output_dir = '{case_dir}/interface_data'
-os.makedirs(output_dir, exist_ok=True)
-
-# Extract iso-surface at alpha.water = 0.5
-contour = Contour(Input=case)
-contour.ContourBy = ['CELLS', 'alpha.water']
-contour.Isosurfaces = [0.5]
-
-# CSV for summary statistics
-csv_data = []
-csv_data.append("time,max_z,min_z,mean_z,num_points")
-
-for i, t in enumerate(timesteps):
-    # Update to current timestep
-    UpdatePipeline(time=t)
+    print(f"  📊 Extracting interface for {case_dir} using PyVista...")
     
-    # Save VTP file (full 3D interface)
-    vtp_file = os.path.join(output_dir, f'interface_t{{t:.6f}}.vtp')
-    SaveData(vtp_file, contour)
-    
-    # Get interface data for statistics
-    data = servermanager.Fetch(contour)
-    if data.GetNumberOfPoints() > 0:
-        points = data.GetPoints()
-        z_coords = [points.GetPoint(j)[2] for j in range(data.GetNumberOfPoints())]
-        max_z = max(z_coords)
-        min_z = min(z_coords)
-        mean_z = sum(z_coords) / len(z_coords)
-        num_pts = len(z_coords)
-    else:
-        max_z = min_z = mean_z = 0.0
-        num_pts = 0
-    
-    csv_data.append(f"{{t}},{{max_z}},{{min_z}},{{mean_z}},{{num_pts}}")
-    
-    if (i+1) % 10 == 0:
-        print(f"  Processed {{i+1}}/{{len(timesteps)}} timesteps")
-
-# Save CSV summary
-csv_file = os.path.join(output_dir, 'interface_summary.csv')
-with open(csv_file, 'w') as f:
-    f.write('\\n'.join(csv_data))
-
-print(f"Interface data saved to {{output_dir}}/")
-print(f"  - VTP files: interface_t*.vtp ({{len(timesteps)}} files)")
-print(f"  - Summary: interface_summary.csv")
-"""
-    
-    script_path = os.path.join(case_dir, "extract_interface.py")
-    with open(script_path, "w") as f:
-        f.write(script_content)
-    
-    # Run pvpython
-    pvpython = shutil.which("pvpython")
-    if not pvpython:
-        print(f"  ❌ pvpython not found. Install ParaView to extract interfaces.")
-        return False
-    
+    foam_file = os.path.join(case_dir, "case.foam")
+    if not os.path.exists(foam_file):
+        with open(foam_file, 'w') as f:
+            pass
+            
     try:
-        result = subprocess.run([pvpython, script_path], cwd=case_dir, check=True, 
-                               capture_output=True, text=True)
-        print(result.stdout)
-        print(f"  ✅ Interface extracted: {case_dir}/interface_data/")
-        return True
-    except subprocess.CalledProcessError as e:
-        print(f"  ❌ Error extracting interface: {e.stderr}")
-        return False
+        reader = pv.POpenFOAMReader(foam_file)
+    except Exception as e:
+         print(f"  ❌ Error loading OpenFOAM case: {e}")
+         return False
+
+    time_values = reader.time_values
+    output_dir = os.path.join(case_dir, "interface_data")
+    os.makedirs(output_dir, exist_ok=True)
+    
+    csv_data = ["time,max_z,min_z,mean_z,num_points"]
+    
+    print(f"  Processing {len(time_values)} timesteps...")
+    
+    for i, t in enumerate(time_values):
+        reader.set_active_time_value(t)
+        mesh = reader.read()
+        
+        # Get Internal Mesh
+        if mesh.n_blocks > 0:
+            internal_mesh = mesh[0]
+            
+            # Check for alpha.water
+            if 'alpha.water' in internal_mesh.cell_data:
+                # To contour on cell data, we first move to point data usually, 
+                # or PyVista handles it. cell_data_to_point_data is safer for smooth contours.
+                mesh_point = internal_mesh.cell_data_to_point_data()
+                
+                try:
+                    isosurface = mesh_point.contour(isosurfaces=[0.5], scalars='alpha.water')
+                    
+                    # Save VTP
+                    vtp_file = os.path.join(output_dir, f'interface_t{t:.6f}.vtp')
+                    isosurface.save(vtp_file)
+                    
+                    # Calc Stats
+                    if isosurface.n_points > 0:
+                        z_coords = isosurface.points[:, 2]
+                        max_z = np.max(z_coords)
+                        min_z = np.min(z_coords)
+                        mean_z = np.mean(z_coords)
+                        num_pts = len(z_coords)
+                    else:
+                        max_z = min_z = mean_z = 0.0
+                        num_pts = 0
+                        
+                    csv_data.append(f"{t},{max_z},{min_z},{mean_z},{num_pts}")
+                    
+                except Exception as e:
+                    # Sometimes contour fails if scalar range doesn't cross 0.5 (e.g. empty or full tank)
+                    csv_data.append(f"{t},0,0,0,0")
+            else:
+                csv_data.append(f"{t},0,0,0,0")
+        else:
+            csv_data.append(f"{t},0,0,0,0")
+            
+        if (i+1) % 10 == 0:
+            print(f"    Processed {i+1}/{len(time_values)}")
+            
+    # Save CSV
+    csv_file = os.path.join(output_dir, 'interface_summary.csv')
+    with open(csv_file, 'w') as f:
+        f.write('\n'.join(csv_data))
+        
+    print(f"  ✅ Interface extracted: {output_dir}/")
+    return True
 
 def generate_potential_flow(case_dir):
     """Generates potential flow theory prediction for wall elevation."""
