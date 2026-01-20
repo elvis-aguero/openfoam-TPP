@@ -284,8 +284,20 @@ def setup_case(params):
 
 def run_case_local(case_name, n_cpus=1):
     """Runs simulation locally."""
-    print(f"  🏃 Running {case_name} (CPUs={n_cpus})...")
-    subprocess.run(["make", "-C", case_name, "run", f"N_CPUS={n_cpus}"], check=True)
+    # Check for existing progress
+    has_progress = os.path.isdir(os.path.join(case_name, "processor0"))
+    if not has_progress:
+        # Check for serial time folders (excluding '0')
+        time_folders = [d for d in os.listdir(case_name) if d.replace('.','',1).isdigit() and d != '0']
+        if time_folders:
+            has_progress = True
+            
+    if has_progress:
+        print(f"  🏃 Resuming {case_name} (CPUs={n_cpus})...")
+        subprocess.run(["make", "-C", case_name, "resume", f"N_CPUS={n_cpus}"], check=True)
+    else:
+        print(f"  🏃 Running {case_name} (CPUs={n_cpus})...")
+        subprocess.run(["make", "-C", case_name, "run", f"N_CPUS={n_cpus}"], check=True)
 
 def run_case_oscar(case_name, params, is_oscar):
     """Submits job to Slurm on Oscar."""
@@ -321,9 +333,9 @@ def run_case_oscar(case_name, params, is_oscar):
         "export OMP_NUM_THREADS=1",
         "",
         f"echo 'Case: {case_name}'",
-        "# Check if we are resuming (processor directories exist)",
-        "if [ -d 'processor0' ]; then",
-        "    echo 'Found existing processor directories. Resuming simulation...'",
+        "# Check if we are resuming (parallel processors or serial time folders existed)",
+        "if [ -d 'processor0' ] || (ls -d [0-9]* 2>/dev/null | grep -v '^0$' | grep -q .) ; then",
+        "    echo 'Found existing progress. Resuming simulation...'",
         f"    make -C {case_name} resume OSCAR=1 N_CPUS={n_cpus}",
         "else",
         "    echo 'Starting fresh simulation...'",
