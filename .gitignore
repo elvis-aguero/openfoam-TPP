@@ -11,32 +11,22 @@ env/
 *.pyc
 
 # Case-specific generated folders
+# Ignore the cases but allow specific file types within them
 case_*/
 
-# OpenFOAM generated files
+# Un-ignore the results we want
+!case_*/postProcessing/
+!case_*/postProcessing/**
+
+# Ensure heavy data is ALWAYS ignored even if inside allowed folders
 **/constant/polyMesh/
-**/postProcessing/
 **/processor*/
-**/dynamicMeshDict.bak
-**/*.foam
-
-# Time step results (binary/heavy)
-# Keep the initial '0' folder
-[0-9]*
+**/[0-9]*
 ![0]/
-**/[1-9]*
-**/*.[0-9]*
-
-# Meshing files
+**/*.foam
 **/*.msh
 **/*.geo.bak
 
-# Media/Videos
-# **/*.avi
-# **/*.mp4
-# **/*.png
-# **/*.jpg
+# Media management: Allow these specifically in result folders
+# Already handled by un-ignoring postProcessing/** above
 
-# Allow results directory
-!results/
-!results/**

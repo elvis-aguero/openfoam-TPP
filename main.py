@@ -66,10 +66,6 @@ def ensure_dependencies():
 # Run dependency check
 ensure_dependencies()
 
-# Ensure results directory exists
-os.makedirs("results", exist_ok=True)
-
-
 import math
 import itertools
 import re
@@ -590,8 +586,8 @@ def generate_video(case_dir):
         
     print(f"  Found {len(time_values)} timesteps.")
     
-    # Setup Output
-    results_dir = os.path.join("results", os.path.basename(case_dir))
+    # Setup Output in CASE folder
+    results_dir = os.path.join(case_dir, "postProcessing")
     os.makedirs(results_dir, exist_ok=True)
     video_path = os.path.join(results_dir, "animation.mp4")
     
@@ -670,8 +666,8 @@ def extract_interface(case_dir):
 
     time_values = reader.time_values
     
-    # Setup Output in RESULTS folder
-    results_dir = os.path.join("results", os.path.basename(case_dir), "interface")
+    # Setup Output in CASE folder
+    results_dir = os.path.join(case_dir, "postProcessing", "interface")
     os.makedirs(results_dir, exist_ok=True)
     
     csv_data = ["time,max_z,min_z,mean_z,num_points"]
@@ -765,8 +761,8 @@ def generate_potential_flow(case_dir):
     duration = DEFAULTS['duration']
     dt = 0.01  # Output time step
     
-    # Setup Output in RESULTS folder
-    results_dir = os.path.join("results", os.path.basename(case_dir), "potential_flow")
+    # Setup Output in CASE folder
+    results_dir = os.path.join(case_dir, "postProcessing", "potential_flow")
     os.makedirs(results_dir, exist_ok=True)
     
     try:
@@ -899,8 +895,8 @@ def run_postprocess_oscar(case_name, action):
         "#SBATCH -n 1",
         "#SBATCH --time=01:00:00",
         "#SBATCH --mem=8G",
-        f"#SBATCH -o results/{case_name}/post_{action}.%j.out",
-        f"#SBATCH -e results/{case_name}/post_{action}.%j.err",
+        f"#SBATCH -o {case_name}/postProcessing/post_{action}.%j.out",
+        f"#SBATCH -e {case_name}/postProcessing/post_{action}.%j.err",
         "",
         "set -euo pipefail",
         "",
@@ -909,7 +905,7 @@ def run_postprocess_oscar(case_name, action):
         "echo 'End: $(date)'"
     ]
     
-    os.makedirs(os.path.join("results", case_name), exist_ok=True)
+    os.makedirs(os.path.join(case_name, "postProcessing"), exist_ok=True)
     
     with open(script_path, "w") as f:
         f.write("\n".join(header))
