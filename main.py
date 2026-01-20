@@ -8,6 +8,14 @@ import argparse
 # --- Dependency Management ---
 def ensure_dependencies():
     """Check and install required Python packages."""
+    # Check if we have already tried to restart in this process tree
+    if os.environ.get("SLOSHING_ENV_RESTARTED") == "1":
+        in_venv = True
+    else:
+        # Fallback check
+        venv_path = os.path.join(os.path.dirname(__file__), "sloshing")
+        in_venv = venv_path in sys.executable
+    
     try:
         import numpy
         import scipy
@@ -16,12 +24,14 @@ def ensure_dependencies():
         import imageio
         import imageio_ffmpeg
         import h5py
-    except ImportError:
-        print("\n⚠️  Missing dependencies detected.")
+    except ImportError as e:
+        if in_venv:
+            print(f"\n❌ Error: Critical dependency missing in virtual environment: {e}")
+            print("Try deleting the 'sloshing' directory and running again.")
+            sys.exit(1)
+            
+        print(f"\n⚠️  Missing dependencies detected: {e}")
         print("Installing required packages (numpy, scipy, matplotlib, pyvista, imageio, imageio-ffmpeg, h5py)...")
-        
-        # Try to use existing venv or create one
-        venv_path = os.path.join(os.path.dirname(__file__), "sloshing")
         
         if not os.path.exists(venv_path):
             print(f"Creating virtual environment: {venv_path}")
@@ -42,8 +52,16 @@ def ensure_dependencies():
         print("\n✅ Dependencies installed successfully!")
         print(f"Restarting with virtual environment...\n")
         
+        # Set environment variable to prevent loop
+        os.environ["SLOSHING_ENV_RESTARTED"] = "1"
+        
         # Restart script with venv python
         os.execv(python_path, [python_path] + sys.argv)
+    except Exception as e:
+        print(f"\n❌ Error during dependency import: {e}")
+        import traceback
+        traceback.print_exc()
+        sys.exit(1)
 
 # Run dependency check
 ensure_dependencies()
@@ -860,6 +878,13 @@ def menu_postprocess(is_oscar):
         
         print(f"\nGenerating potential flow predictions for {len(indices)} case(s)...")
         for i in indices:
+            if is_oscar:
+                if i == indices[0]:
+                    submit = input("\n⚠️  Animation rendering detected. Submit as Slurm job? (y/n): ").strip().lower()
+                    if submit == 'y':
+                        for idx in indices:
+                            run_postprocess_oscar(cases[idx], "flow")
+                        return
             generate_potential_flow(cases[i])
 
 def run_postprocess_oscar(case_name, action):
