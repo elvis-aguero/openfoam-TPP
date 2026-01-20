@@ -295,15 +295,7 @@ def run_case_oscar(case_name, params, is_oscar):
         f"#SBATCH -e {case_name}/slurm.%j.err",
         "#SBATCH --mail-type=END",
         "#SBATCH --mail-user=elvis_vera@brown.edu",
-        ""
-    ]
-    
-    # Add module loads
-    if CLUSTER_MODULES:
-        header.append(f"module load {' '.join(CLUSTER_MODULES)}")
-        header.append("")
-    
-    header.extend([
+        "",
         "set -euo pipefail",
         "export OMP_NUM_THREADS=1",
         "",
