@@ -220,24 +220,7 @@ def print_summary(summary):
 
 def generate_video_from_csv(csv_file, case_dir, R, duration=10.0, fps=30):
     """
-    Generate MP4 video from potential flow CSV data.
-    
-    Parameters:
-    -----------
-    csv_file : str
-        Path to CSV file with potential flow data
-    case_dir : str
-        Case directory for output
-    R : float
-        Cylinder radius (for visualization scaling)
-    duration : float
-        Video duration (s)
-    fps : int
-        Frames per second
-        
-    Returns:
-    --------
-    str : Path to output video file
+    Generate MP4 video from potential flow CSV data, showing moving cylinder.
     """
     import os
     import numpy as np
@@ -246,17 +229,37 @@ def generate_video_from_csv(csv_file, case_dir, R, duration=10.0, fps=30):
     # Check if matplotlib is available
     try:
         import matplotlib
-        matplotlib.use('Agg')  # Non-interactive backend
+        matplotlib.use('Agg')
         import matplotlib.pyplot as plt
         from matplotlib.animation import FuncAnimation, FFMpegWriter
+        from mpl_toolkits.mplot3d import Axes3D
     except ImportError:
         print("  ⚠️  matplotlib not installed. Cannot generate video.")
         return None
     
+    # Extract params from summary/filename if possible, else default
+    # Needed for motion: a (orbital radius), omega (freq)
+    # We'll try to get them from summary dict passed in usually, but here we just have CSV.
+    # Hack: Parse filename or just assume from input args if available. 
+    # Actually, main.py passes these args to generate_wall_elevation_csv, 
+    # but generate_video_from_csv only gets csv_file, case_dir, R, duration.
+    # Let's verify we can get 'a' and 'omega' from somewhere.
+    # For now, we'll try to re-parse from case_dir name.
+    
+    import re
+    match = re.match(r'case_H([\d.]+)_D([\d.]+)_(\w+)_R([\d.]+)_f([\d.]+)', os.path.basename(case_dir))
+    if match:
+        a = float(match.group(4)) # R_orbital
+        f_hz = float(match.group(5))
+        omega = 2 * np.pi * f_hz
+    else:
+        a = 0.005 # Default if fail
+        omega = 1.0
+        
     # Read CSV data
     times = []
     thetas = []
-    zetas = []
+    zetas = [] # Wall elevation
     
     with open(csv_file, 'r') as f:
         reader = csv.DictReader(f)
@@ -265,121 +268,119 @@ def generate_video_from_csv(csv_file, case_dir, R, duration=10.0, fps=30):
             thetas.append(float(row['theta']))
             zetas.append(float(row['zeta_wall']))
     
-    # Convert to numpy arrays and reshape
     times = np.array(times)
     thetas = np.array(thetas)
     zetas = np.array(zetas)
     
-    # Get unique times and thetas
     unique_times = np.unique(times)
     unique_thetas = np.unique(thetas)
     n_theta = len(unique_thetas)
-    
-    # Reshape data
     zeta_grid = zetas.reshape(-1, n_theta)
     
-    # Setup figure
-    fig = plt.figure(figsize=(12, 10))
+    # Setup Figure
+    fig = plt.figure(figsize=(10, 8))
+    ax = fig.add_subplot(111, projection='3d')
     
-    # 3D surface plot
-    ax1 = fig.add_subplot(2, 2, (1, 3), projection='3d')
+    # Pre-calculate cylinder mesh (unit radius, then scale)
+    theta_mesh = np.linspace(0, 2*np.pi, 50)
+    z_mesh = np.linspace(-0.1, 0.1, 10) # Placeholder height
+    THETA, Z_wall = np.meshgrid(theta_mesh, z_mesh)
+    X_cyl_unit = np.cos(THETA)
+    Y_cyl_unit = np.sin(THETA)
     
-    # 2D unwrapped view
-    ax2 = fig.add_subplot(2, 2, 2)
+    # Grid for liquid surface
+    r_surface = np.linspace(0, R, 20)
+    theta_surface = np.linspace(0, 2*np.pi, 50)
+    R_surf, TH_surf = np.meshgrid(r_surface, theta_surface)
+    X_surf_rel = R_surf * np.cos(TH_surf)
+    Y_surf_rel = R_surf * np.sin(TH_surf)
     
-    # Time series at specific angles
-    ax3 = fig.add_subplot(2, 2, 4)
+    # To properly reconstruct the full surface eta(r,theta), we technically need the Bessel modes.
+    # The CSV only has wall elevation. 
+    # APPROXIMATION for Visualization: 
+    # Assume the fundamental mode dominates: eta(r, theta) ~ J1(k*r)*cos(theta).
+    # Wall elevation is at r=R. So eta(r) = eta(R) * J1(k*r)/J1(k*R).
+    # Since we don't have coefficients, a linear radial profile r/R is a "decent" visual proxy 
+    # for the sloshing mode, or we can just flat interpolate from 0 at center? 
+    # Actually mode 1 is antisymmetric, so center is 0. 
+    # We will scale the wall elevation by (r/R) for a visual "sloshing" effect.
     
-    # Convert to Cartesian for 3D plot
-    def polar_to_cart(theta, r, z):
-        x = r * np.cos(theta)
-        y = r * np.sin(theta)
-        return x, y, z
-    
-    # Animation update function
     def update(frame):
-        ax1.clear()
-        ax2.clear()
-        ax3.clear()
+        ax.clear()
         
         t_idx = int(frame * len(unique_times) / (fps * duration))
-        if t_idx >= len(unique_times):
-            t_idx = len(unique_times) - 1
-        
+        if t_idx >= len(unique_times): t_idx = len(unique_times) - 1
         t = unique_times[t_idx]
-        zeta_t = zeta_grid[t_idx, :]
         
-        # 3D surface
-        theta_mesh = np.linspace(0, 2*np.pi, 100)
-        zeta_interp = np.interp(theta_mesh, unique_thetas, zeta_t, period=2*np.pi)
+        # 1. Cylinder Motion (Orbital)
+        # x_c(t) = a * cos(omega * t)
+        # y_c(t) = a * sin(omega * t)
+        # Verify phase with your solver. Usually standard orbital is counter-clockwise.
+        xc = a * np.cos(omega * t)
+        yc = a * np.sin(omega * t)
         
-        x, y, z = polar_to_cart(theta_mesh, R, zeta_interp)
+        # 2. Update Cylinder Wall Position
+        X_wall = R * X_cyl_unit + xc
+        Y_wall = R * Y_cyl_unit + yc
+        # Use wall elevation limits to set cylinder height dynamic or fixed
+        z_min = -R # Arbitrary visual depth
+        z_max = +R 
+        # But we want the wall to look like a container.
+        # Let's fix it relative to a mean level z=0.
+        ax.plot_surface(X_wall, Y_wall, Z_wall*0 + z_max, color='k', alpha=0.1) # Top rim
+        ax.plot_surface(X_wall, Y_wall, Z_wall*0 + z_min, color='k', alpha=0.1) # Bottom rim
+        # Vertical struts or wireframe
+        for angle in np.linspace(0, 2*np.pi, 12, endpoint=False):
+            ax.plot([R*np.cos(angle)+xc, R*np.cos(angle)+xc], 
+                    [R*np.sin(angle)+yc, R*np.sin(angle)+yc], 
+                    [z_min, z_max], 'k-', lw=0.5, alpha=0.3)
+            
+        # 3. Update Surface
+        # Get wall elevation at this time
+        zeta_wall_t = zeta_grid[t_idx, :] # vector over theta
+        # Interpolate to surface grid theta
+        zeta_wall_interp = np.interp(theta_surface, unique_thetas, zeta_wall_t, period=2*np.pi)
+        # Tile for radial 
+        # zeta(r, theta) approx = zeta(R, theta) * (r/R)
+        Z_surf = np.outer(zeta_wall_interp, r_surface / R)
         
-        # Plot cylinder wall
-        theta_cyl = np.linspace(0, 2*np.pi, 50)
-        z_cyl = np.linspace(zeta_interp.min(), zeta_interp.max(), 20)
-        Theta_cyl, Z_cyl = np.meshgrid(theta_cyl, z_cyl)
-        X_cyl = R * np.cos(Theta_cyl)
-        Y_cyl = R * np.sin(Theta_cyl)
-        ax1.plot_surface(X_cyl, Y_cyl, Z_cyl, alpha=0.1, color='gray')
+        X_surf = X_surf_rel + xc
+        Y_surf = Y_surf_rel + yc
         
-        # Plot interface
-        ax1.plot(x, y, z, 'b-', linewidth=3, label='Interface')
-        ax1.set_xlabel('X (m)')
-        ax1.set_ylabel('Y (m)')
-        ax1.set_zlabel('ζ (m)')
-        ax1.set_title(f'Potential Flow Theory\nt = {t:.3f} s')
-        ax1.set_box_aspect([1, 1, 0.5])
+        # Plot Surface
+        surf = ax.plot_surface(X_surf, Y_surf, Z_surf, cmap='coolwarm', 
+                               linewidth=0, antialiased=False, alpha=0.8)
         
-        # 2D unwrapped view
-        ax2.plot(unique_thetas, zeta_t, 'b-', linewidth=2)
-        ax2.set_xlabel('θ (rad)')
-        ax2.set_ylabel('ζ (m)')
-        ax2.set_title('Unwrapped Interface')
-        ax2.grid(True, alpha=0.3)
-        ax2.set_xlim([0, 2*np.pi])
+        # Settings
+        ax.set_xlim([-R-a, R+a])
+        ax.set_ylim([-R-a, R+a])
+        ax.set_zlim([-R/2, R/2])
+        ax.set_xlabel('X')
+        ax.set_title(f'Potential Flow Prediction\nt={t:.2f} s')
         
-        # Time series
-        angles_to_plot = [0, np.pi/2, np.pi]
-        for angle in angles_to_plot:
-            idx = np.argmin(np.abs(unique_thetas - angle))
-            zeta_series = zeta_grid[:t_idx+1, idx]
-            ax3.plot(unique_times[:t_idx+1], zeta_series, 
-                    label=f'θ = {angle:.2f}', linewidth=2)
-        
-        ax3.set_xlabel('Time (s)')
-        ax3.set_ylabel('ζ (m)')
-        ax3.set_title('Interface Height vs Time')
-        ax3.legend()
-        ax3.grid(True, alpha=0.3)
-        ax3.set_xlim([0, duration])
-        
-        plt.tight_layout()
-    
-    # Create animation
+        # Ground reference text
+        ax.text2D(0.05, 0.95, "Moving Mesh Frame", transform=ax.transAxes)
+
     n_frames = int(fps * duration)
     anim = FuncAnimation(fig, update, frames=n_frames, interval=1000/fps)
     
-    # Save video
-    output_file = os.path.join(case_dir, "potential_flow_animation.mp4")
+    output_file = os.path.join(case_dir, "postProcessing", "potential_flow", "potential_flow_animation.mp4")
     
-    # Try to find ffmpeg from imageio_ffmpeg if it's not in PATH
+    # Try to find ffmpeg
     try:
         import imageio_ffmpeg
         ffmpeg_path = imageio_ffmpeg.get_ffmpeg_exe()
         matplotlib.rcParams['animation.ffmpeg_path'] = ffmpeg_path
-    except ImportError:
+    except:
         pass
         
     writer = FFMpegWriter(fps=fps, bitrate=2000)
-    
     try:
         anim.save(output_file, writer=writer)
         plt.close(fig)
         return output_file
     except Exception as e:
-        print(f"  ⚠️  Error saving video: {e}")
-        print(f"  (FFmpeg may not be installed)")
+        print(f"Error saving video: {e}")
         plt.close(fig)
         return None
 

@@ -623,22 +623,28 @@ def generate_video(case_dir):
                 
                 # Check for datasets
                 if mesh.n_blocks > 0:
-                    # Usually block 0 is internalMesh
                     internal_mesh = mesh[0]
-                    
-                    # Add data to plotter
                     plotter.clear()
                     
-                    # We want to visualize alpha.water
-                    # PyVista/VTK reads OpenFOAM data differently depending on the reader version
-                    # Often 'alpha.water' is in cell_data
-                    
+                    # 1. Plot Water Surface (Isosurface alpha.water = 0.5)
                     if 'alpha.water' in internal_mesh.cell_data:
-                        plotter.add_mesh(internal_mesh, scalars='alpha.water', cmap='coolwarm', 
-                                        clim=[0, 1], show_edges=False)
-                    else:
-                        plotter.add_mesh(internal_mesh, color='lightblue', show_edges=True)
-                        
+                        # Convert to point data for smooth contouring
+                        mesh_point = internal_mesh.cell_data_to_point_data()
+                        try:
+                            isosurface = mesh_point.contour(isosurfaces=[0.5], scalars='alpha.water')
+                            plotter.add_mesh(isosurface, color='deepskyblue', smooth_shading=True, 
+                                           specular=0.5, show_edges=False, label='Water')
+                        except:
+                            pass # No interface found (empty/full)
+                    
+                    # 2. Plot Tank Container (Wireframe/Transparent)
+                    # Extract feature edges or just the boundary
+                    # For simplicity, we can plot the whole mesh boundaries wireframe
+                    plotter.add_mesh(internal_mesh.extract_feature_edges(), color='black', style='wireframe', opacity=0.1)
+                    
+                    # 3. Add ground reference grid to see motion "in space"
+                    plotter.add_floor(face='z', i_resolution=20, j_resolution=20, color='gray', pad=1.0)
+
                     plotter.add_text(f"Time: {t:.2f} s", position='upper_left', font_size=12, color='black')
                     
                     # Render
