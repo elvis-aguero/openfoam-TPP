@@ -45,6 +45,10 @@ def ensure_dependencies():
 # Run dependency check
 ensure_dependencies()
 
+# Ensure results directory exists
+os.makedirs("results", exist_ok=True)
+
+
 import math
 import itertools
 import re
@@ -565,6 +569,11 @@ def generate_video(case_dir):
         
     print(f"  Found {len(time_values)} timesteps.")
     
+    # Setup Output
+    results_dir = os.path.join("results", os.path.basename(case_dir))
+    os.makedirs(results_dir, exist_ok=True)
+    video_path = os.path.join(results_dir, "animation.mp4")
+    
     # Setup Plotter (Off-screen)
     plotter = pv.Plotter(off_screen=True, window_size=[1920, 1080])
     
@@ -610,6 +619,7 @@ def generate_video(case_dir):
                 if (i+1) % 10 == 0:
                     print(f"    Renderer frame {i+1}/{len(time_values)}")
 
+
         print(f"  ✅ Video saved: {video_path}")
         return True
         
@@ -638,8 +648,10 @@ def extract_interface(case_dir):
          return False
 
     time_values = reader.time_values
-    output_dir = os.path.join(case_dir, "interface_data")
-    os.makedirs(output_dir, exist_ok=True)
+    
+    # Setup Output in RESULTS folder
+    results_dir = os.path.join("results", os.path.basename(case_dir), "interface")
+    os.makedirs(results_dir, exist_ok=True)
     
     csv_data = ["time,max_z,min_z,mean_z,num_points"]
     
@@ -662,8 +674,8 @@ def extract_interface(case_dir):
                 try:
                     isosurface = mesh_point.contour(isosurfaces=[0.5], scalars='alpha.water')
                     
-                    # Save VTP
-                    vtp_file = os.path.join(output_dir, f'interface_t{t:.6f}.vtp')
+                    # Save VTP to results
+                    vtp_file = os.path.join(results_dir, f'interface_t{t:.6f}.vtp')
                     isosurface.save(vtp_file)
                     
                     # Calc Stats
@@ -691,11 +703,11 @@ def extract_interface(case_dir):
             print(f"    Processed {i+1}/{len(time_values)}")
             
     # Save CSV
-    csv_file = os.path.join(output_dir, 'interface_summary.csv')
+    csv_file = os.path.join(results_dir, 'interface_summary.csv')
     with open(csv_file, 'w') as f:
         f.write('\n'.join(csv_data))
         
-    print(f"  ✅ Interface extracted: {output_dir}/")
+    print(f"  ✅ Interface extracted: {results_dir}/")
     return True
 
 def generate_potential_flow(case_dir):

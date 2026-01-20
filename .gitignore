@@ -32,7 +32,11 @@ case_*/
 **/*.geo.bak
 
 # Media/Videos
-**/*.avi
-**/*.mp4
-**/*.png
-**/*.jpg
+# **/*.avi
+# **/*.mp4
+# **/*.png
+# **/*.jpg
+
+# Allow results directory
+!results/
+!results/**
