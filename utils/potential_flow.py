@@ -362,7 +362,19 @@ def generate_video_from_csv(csv_file, case_dir, R, duration=10.0, fps=30):
     
     # Save video
     output_file = os.path.join(case_dir, "potential_flow_animation.mp4")
-    writer = FFMpegWriter(fps=fps, bitrate=2000)
+    
+    # Try to find ffmpeg from imageio_ffmpeg if it's not in PATH
+    ffmpeg_path = None
+    try:
+        import imageio_ffmpeg
+        ffmpeg_path = imageio_ffmpeg.get_ffmpeg_exe()
+    except ImportError:
+        pass
+        
+    if ffmpeg_path:
+        writer = FFMpegWriter(fps=fps, bitrate=2000, executable=ffmpeg_path)
+    else:
+        writer = FFMpegWriter(fps=fps, bitrate=2000)
     
     try:
         anim.save(output_file, writer=writer)

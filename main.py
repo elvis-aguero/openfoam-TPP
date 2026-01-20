@@ -3,6 +3,7 @@ import os
 import sys
 import shutil
 import subprocess
+import argparse
 
 # --- Dependency Management ---
 def ensure_dependencies():
@@ -13,9 +14,11 @@ def ensure_dependencies():
         import matplotlib
         import pyvista
         import imageio
+        import imageio_ffmpeg
+        import h5py
     except ImportError:
         print("\n⚠️  Missing dependencies detected.")
-        print("Installing required packages (numpy, scipy, matplotlib, pyvista, imageio)...")
+        print("Installing required packages (numpy, scipy, matplotlib, pyvista, imageio, imageio-ffmpeg, h5py)...")
         
         # Try to use existing venv or create one
         venv_path = os.path.join(os.path.dirname(__file__), "sloshing")
@@ -744,18 +747,24 @@ def generate_potential_flow(case_dir):
     duration = DEFAULTS['duration']
     dt = 0.01  # Output time step
     
+    # Setup Output in RESULTS folder
+    results_dir = os.path.join("results", os.path.basename(case_dir), "potential_flow")
+    os.makedirs(results_dir, exist_ok=True)
+    
     try:
         # Generate CSV
+        csv_file = os.path.join(results_dir, "potential_flow_wall.csv")
         output_file, summary = generate_wall_elevation_csv(
             case_dir, R_cyl, R_orbital, freq, d,
-            duration=duration, dt=dt, n_theta=64, n_modes=30
+            duration=duration, dt=dt, n_theta=64, n_modes=30,
+            output_file=csv_file
         )
         print_summary(summary)
         print(f"  ✅ Potential flow data saved: {output_file}")
         
         # Generate video
         print(f"  🎬 Generating potential flow animation...")
-        video_file = generate_video_from_csv(output_file, case_dir, R_cyl, duration, fps=30)
+        video_file = generate_video_from_csv(output_file, results_dir, R_cyl, duration, fps=30)
         if video_file:
             print(f"  ✅ Animation saved: {video_file}")
         
@@ -807,6 +816,13 @@ def menu_postprocess(is_oscar):
         
         print(f"\nGenerating videos for {len(indices)} case(s)...")
         for i in indices:
+            if is_oscar:
+                if i == indices[0]:
+                    submit = input("\n⚠️  Heavy video rendering detected. Submit as Slurm job? (y/n): ").strip().lower()
+                    if submit == 'y':
+                        for idx in indices:
+                            run_postprocess_oscar(cases[idx], "video")
+                        return
             generate_video(cases[i])
     elif choice == '2':
         print("\n→ Interface Extraction (OpenFOAM Results)")
@@ -822,6 +838,13 @@ def menu_postprocess(is_oscar):
         
         print(f"\nExtracting interfaces for {len(indices)} case(s)...")
         for i in indices:
+            if is_oscar:
+                if i == indices[0]:
+                    submit = input("\n⚠️  Heavy post-processing detected. Submit as Slurm job? (y/n): ").strip().lower()
+                    if submit == 'y':
+                        for idx in indices:
+                            run_postprocess_oscar(cases[idx], "interface")
+                        return
             extract_interface(cases[i])
     elif choice == '3':
         print("\n→ Potential Flow Theory Prediction")
@@ -838,6 +861,36 @@ def menu_postprocess(is_oscar):
         print(f"\nGenerating potential flow predictions for {len(indices)} case(s)...")
         for i in indices:
             generate_potential_flow(cases[i])
+
+def run_postprocess_oscar(case_name, action):
+    """Submits a post-processing job to Slurm."""
+    script_path = os.path.join(case_name, f"postprocess_{action}.slurm")
+    
+    header = [
+        "#!/usr/bin/env bash",
+        f"#SBATCH -J post_{action}_{case_name}",
+        "#SBATCH -p batch",
+        "#SBATCH -N 1",
+        "#SBATCH -n 1",
+        "#SBATCH --time=01:00:00",
+        "#SBATCH --mem=8G",
+        f"#SBATCH -o results/{case_name}/post_{action}.%j.out",
+        f"#SBATCH -e results/{case_name}/post_{action}.%j.err",
+        "",
+        "set -euo pipefail",
+        "",
+        f"echo 'Post-processing: {action} on {case_name}'",
+        f"python3 main.py --headless --case {case_name} --action {action}",
+        "echo 'End: $(date)'"
+    ]
+    
+    os.makedirs(os.path.join("results", case_name), exist_ok=True)
+    
+    with open(script_path, "w") as f:
+        f.write("\n".join(header))
+    
+    print(f"  🚀 Submitting post-processing job for {case_name} ({action})...")
+    subprocess.run(["sbatch", script_path], check=True)
 
 def main_menu():
     """Main entry point."""
@@ -870,4 +923,23 @@ def main_menu():
             print("Invalid option.")
 
 if __name__ == "__main__":
-    main_menu()
+    parser = argparse.ArgumentParser()
+    parser.add_argument("--headless", action="store_true", help="Run without menu")
+    parser.add_argument("--case", type=str, help="Case directory for headless mode")
+    parser.add_argument("--action", type=str, choices=["video", "interface", "flow"], help="Action for headless mode")
+    
+    args = parser.parse_args()
+    
+    if args.headless:
+        if not args.case or not args.action:
+            print("Error: --case and --action are required in headless mode.")
+            sys.exit(1)
+        
+        if args.action == "video":
+            generate_video(args.case)
+        elif args.action == "interface":
+            extract_interface(args.case)
+        elif args.action == "flow":
+            generate_potential_flow(args.case)
+    else:
+        main_menu()
