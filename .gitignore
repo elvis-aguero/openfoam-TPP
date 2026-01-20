@@ -11,10 +11,13 @@ env/
 *.pyc
 
 # Case-specific generated folders
-# Ignore the cases but allow specific file types within them
-case_*/
+# Allow the case directories themselves
+!case_*/
 
-# Un-ignore the results we want
+# Ignore all contents of case folders by default
+case_*/?*
+
+# Un-ignore the results we want (must un-ignore the directory path)
 !case_*/postProcessing/
 !case_*/postProcessing/**
 
