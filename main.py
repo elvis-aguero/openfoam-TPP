@@ -37,14 +37,25 @@ def ensure_dependencies():
         import h5py
         return # Success
     except ImportError as e:
-        # If we are already in the venv (or just restarted) and it fails, DON'T restart again.
         if in_venv or restarted:
-            print(f"\n❌ Error: Dependency '{e.name}' failed to load inside the virtual environment.")
+            print(f"\n❌ Error: Dependency '{e.name}' failed to load.")
             print(f"   Executable: {sys.executable}")
-            print(f"   Prefix:     {sys.prefix}")
-            print(f"   Search Path: {sys.path[:3]}...")
-            print("\n   Detailed error: ", e)
-            print("\n   Try deleting the 'sloshing' directory and running again.")
+            print(f"   Venv Path:  {venv_path}")
+            
+            # Check for Mismatch: If Prefix doesn't match Venv, we are using the wrong Python
+            mismatch = False
+            try:
+                if not os.path.samefile(sys.prefix, venv_path):
+                    mismatch = True
+            except: mismatch = True
+            
+            if mismatch:
+                print("\n   ⚠️  VENV MISMATCH DETECTED!")
+                print("   The 'sloshing' folder was likely created with a different Python version.")
+                print("   Current active python is: " + sys.version.split()[0])
+            
+            print("\n   ACTION REQUIRED: Please delete the broken virtual environment and restart:")
+            print(f"   rm -rf {venv_path}")
             sys.exit(1)
 
         print(f"\n⚠️  Missing dependencies detected: {e}")
