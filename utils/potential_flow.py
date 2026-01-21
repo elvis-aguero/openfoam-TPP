@@ -322,6 +322,8 @@ def generate_3d_animation(csv_file, output_dir, R, duration, fps):
         if t_idx >= n_t: t_idx = n_t - 1
         
         t = unique_times[t_idx]
+        # Wall Elevation at this time: zeta_wall(theta) -> (n_th,)
+        zeta_t = zeta_wall_grid[t_idx, :]
         # Tank Motion
         xc, yc = a * np.cos(omega * t), a * np.sin(omega * t)
         
@@ -330,13 +332,11 @@ def generate_3d_animation(csv_file, output_dir, R, duration, fps):
         ax.plot_wireframe(R*X_unit + xc, R*Y_unit + yc, Z_wall_cyl, color='k', alpha=0.1, rstride=1, cstride=10)
 
         # Plot Free Surface
-        # Wall Elevation at this time: zeta_wall(theta) -> (n_th,)
-        zw_t = zeta_wall_grid[t_idx, :]
         
         # Reconstruct full surface Z(r, theta) using separation of variables approx:
         # Z(r, theta) = zeta_wall(theta) * (J1(k*r)/J1(k*R))
-        # zw_t is (n_th,), Radial_Profile is (n_r,)
-        Z_surf = zw_t[:, np.newaxis] * Radial_Profile[np.newaxis, :]
+        # zeta_t is (n_th,), Radial_Profile is (n_r,)
+        Z_surf = zeta_t[:, np.newaxis] * Radial_Profile[np.newaxis, :]
         
         ax.plot_surface(X_surf_rel + xc, Y_surf_rel + yc, Z_surf, cmap='coolwarm', 
                               alpha=0.9, rstride=1, cstride=1, linewidth=0, antialiased=False)
