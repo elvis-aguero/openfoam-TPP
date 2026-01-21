@@ -26,14 +26,13 @@ def ensure_dependencies():
         import h5py
     except ImportError as e:
         if in_venv:
-            print(f"\n❌ Error: Critical dependency missing in virtual environment: {e}")
-            print("Try deleting the 'sloshing' directory and running again.")
-            sys.exit(1)
-            
-        print(f"\n⚠️  Missing dependencies detected: {e}")
-        print("Installing required packages (numpy, scipy, matplotlib, pyvista, imageio, imageio-ffmpeg, h5py)...")
-        
-        if not os.path.exists(venv_path):
+            print(f"\n⚠️  Dependency missing in virtual environment: {e}")
+            print("Attempting to repair environment by re-installing requirements...")
+            # Proceed to install logic below instead of exiting
+            venv_path = os.path.join(os.path.dirname(__file__), "sloshing") # Re-define for safety
+        else:
+            print(f"\n⚠️  Missing dependencies detected: {e}")
+            venv_path = os.path.join(os.path.dirname(__file__), "sloshing")
             print(f"Creating virtual environment: {venv_path}")
             subprocess.run([sys.executable, "-m", "venv", venv_path], check=True)
         
