@@ -631,7 +631,9 @@ def generate_video(case_dir):
     
     # Setup Plotter (Off-screen)
     plotter = pv.Plotter(off_screen=True, window_size=[1280, 720])
-    plotter.camera_position = [(0.0, -0.2, 0.15), (0.0, 0.0, 0.0), (0.0, 0.0, 1.0)]
+    # Camera: (Position), (Focal Point), (View Up)
+    # Moving camera back (-0.6 in Y) and up (0.4 in Z) to see full tank (D~0.2, H~0.2)
+    plotter.camera_position = [(0.0, -0.6, 0.4), (0.0, 0.0, 0.05), (0.0, 0.0, 1.0)]
     
     try:
         with imageio.get_writer(video_path_3d, fps=30, macro_block_size=None) as writer:
