@@ -1,0 +1,607 @@
+## SLURM PROLOG ###############################################################
+##    Job ID : 117949
+##  Job Name : post_video_case_H0.208_D0.2_flat_R0.004_f1.88_d20.0_m0.009
+##  Nodelist : node2333
+##      CPUs : 1
+##  Mem/Node : 8192 MB
+## Directory : /oscar/data/dharri15/eaguerov/examples/openfoam/openfoam-TPP
+##   Job Started : Wed Jan 21 09:14:56 AM EST 2026
+###############################################################################
+------------------------------------------------------------
+Action: video | Case: case_H0.208_D0.2_flat_R0.004_f1.88_d20.0_m0.009
+Date: $(date)
+/oscar/data/dharri15/eaguerov/examples/openfoam/openfoam-TPP/sloshing/lib/python3.13/site-packages/pyvista/plotting/utilities/xvfb.py:48: PyVistaDeprecationWarning: This function is deprecated and will be removed in future version of PyVista. Use vtk-osmesa instead.
+  warnings.warn(
+/usr/bin/which: no Xvfb in (/oscar/data/dharri15/eaguerov/examples/openfoam/openfoam-TPP/sloshing/bin:/oscar/rt/9.6/25/spack/x86_64_v3/python-3.13.5-dz6tni4uhljueyq5uhxuhlrvjovmlu4v/bin:/oscar/rt/9.6/25/spack/x86_64_v3/util-linux-uuid-2.41-b6m34ofikpubr4abkpue6zkamw7wrkoz/bin:/oscar/rt/9.6/25/spack/x86_64_v3/gettext-0.23.1-qgq45zfqfly7kiht2clec6ui7dvarzfh/bin:/oscar/rt/9.6/25/spack/x86_64_v3/tar-1.35-xn6abvafin5trttt2fcn4tgymoy4y7eb/bin:/oscar/rt/9.6/25/spack/x86_64_v3/pigz-2.8-ufy2qd7cyjh4uf6h3t7odtr2wsgmdzus/bin:/oscar/rt/9.6/25/spack/x86_64_v3/zstd-1.5.7-v3mtk5cdocaie3frjl2xpy3hmdf4c2hx/bin:/oscar/rt/9.6/25/spack/x86_64_v3/bzip2-1.0.8-raqrlgz3litxmiwewy2k5jxop3cdqhgd/bin:/oscar/rt/9.6/25/spack/x86_64_v3/libxml2-2.13.5-ikrc2oz3yw7m5qpes5twx2hvsgudxlrw/bin:/oscar/rt/9.6/25/spack/x86_64_v3/libiconv-1.18-ifc5abub2utg4iaqlvmeze7cfpxtn7b2/bin:/oscar/rt/9.6/25/spack/x86_64_v3/sqlite-3.46.0-pwg7tka36sc5abuw7l637zgwrvk63tu3/bin:/oscar/rt/9.6/25/spack/x86_64_v3/xz-5.6.3-pvai5g6lrfujwtylklrvke4cdzd3uycf/bin:/oscar/rt/9.6/25/spack/x86_64_v3/gdbm-1.23-vqwxkvvlbdxdvdiwgd7zr2jvyve5coee/bin:/oscar/rt/9.6/25/spack/x86_64_v3/readline-8.2-5n2wzk7kvcggihnbjn2bfnrne2vdpv4n/bin:/oscar/rt/9.6/25/spack/x86_64_v3/expat-2.7.1-54ppch23fr6gr7dladmvnh2t34exgfq4/bin:/oscar/rt/9.6/25/spack/x86_64_v3/ncurses-6.5-a5exz35j3ap6t6c7kn7jltjv4gh35top/bin:/oscar/runtime/bin:/usr/local/bin:/usr/bin:/usr/local/sbin:/usr/sbin:/users/eaguerov/bin)
+[0m[33m2026-01-21 09:14:59.395 (   2.049s) [    7F45D65F7240]vtkXOpenGLRenderWindow.:1458  WARN| bad X server connection. DISPLAY=localhost:12.0[0m
+## SLURM PROLOG ###############################################################
+##    Job ID : 117952
+##  Job Name : post_flow_case_H0.208_D0.2_flat_R0.004_f1.88_d20.0_m0.009
+##  Nodelist : node2333
+##      CPUs : 1
+##  Mem/Node : 8192 MB
+## Directory : /oscar/data/dharri15/eaguerov/examples/openfoam/openfoam-TPP
+##   Job Started : Wed Jan 21 09:15:06 AM EST 2026
+###############################################################################
+------------------------------------------------------------
+Action: flow | Case: case_H0.208_D0.2_flat_R0.004_f1.88_d20.0_m0.009
+Date: $(date)
+Traceback (most recent call last):
+  File "/oscar/data/dharri15/eaguerov/examples/openfoam/openfoam-TPP/main.py", line 817, in generate_potential_flow
+    video_file = generate_video_from_csv(output_file, results_dir, R_cyl, duration, fps=30)
+  File "/oscar/data/dharri15/eaguerov/examples/openfoam/openfoam-TPP/utils/potential_flow.py", line 231, in generate_video_from_csv
+    return os.path.join(case_dir, "postProcessing", "potential_flow") # Return dir
+           ^^
+NameError: name 'os' is not defined. Did you forget to import 'os'?
+  📐 Generating potential flow prediction for case_H0.208_D0.2_flat_R0.004_f1.88_d20.0_m0.009...
+
+============================================================
+  Potential Flow Theory Prediction
+============================================================
+  Cylinder Radius (R):       0.1000 m
+  Orbital Radius (a):        0.0040 m
+  Forcing Frequency (f):     1.8800 Hz
+  Angular Frequency (ω):     11.8124 rad/s
+  Liquid Depth (d):          0.1040 m
+  Froude Number (F):         0.056894
+------------------------------------------------------------
+  Wall Amplitude (A_PT):     3.146940e-02 m
+  Crest-to-Trough (Δh_PT):   6.293879e-02 m
+------------------------------------------------------------
+  Modes Used:                30
+  Output File:               case_H0.208_D0.2_flat_R0.004_f1.88_d20.0_m0.009/postProcessing/potential_flow/potential_flow_wall.csv
+============================================================
+
+  ✅ Potential flow data saved: case_H0.208_D0.2_flat_R0.004_f1.88_d20.0_m0.009/postProcessing/potential_flow/potential_flow_wall.csv
+  🎬 Generating potential flow animation...
+    - Generating 3D moving mesh animation...
+      ✅ Saved: potential_flow_3d.mp4
+    - Generating analysis dashboard animation...
+      ✅ Saved: potential_flow_dashboard.mp4
+  ❌ Error generating potential flow: name 'os' is not defined
+End: $(date)
+------------------------------------------------------------
+  🎬 Generating video for case_H0.208_D0.2_flat_R0.004_f1.88_d20.0_m0.009 using PyVista...
+  Found 401 timesteps.
+    - Generating 3D perspective video...
+      Rendered 3D frame 20/401
+      Rendered 3D frame 40/401
+      Rendered 3D frame 60/401
+      Rendered 3D frame 80/401
+      Rendered 3D frame 100/401
+      Rendered 3D frame 120/401
+      Rendered 3D frame 140/401
+      Rendered 3D frame 160/401
+      Rendered 3D frame 180/401
+      Rendered 3D frame 200/401
+      Rendered 3D frame 220/401
+      Rendered 3D frame 240/401
+      Rendered 3D frame 260/401
+      Rendered 3D frame 280/401
+      Rendered 3D frame 300/401
+      Rendered 3D frame 320/401
+      Rendered 3D frame 340/401
+      Rendered 3D frame 360/401
+      Rendered 3D frame 380/401
+      Rendered 3D frame 400/401
+      ✅ Saved: animation_3d.mp4
+End: $(date)
+------------------------------------------------------------
+## SLURM PROLOG ###############################################################
+##    Job ID : 118001
+##  Job Name : post_video_case_H0.208_D0.2_flat_R0.004_f1.88_d20.0_m0.009
+##  Nodelist : node2333
+##      CPUs : 1
+##  Mem/Node : 8192 MB
+## Directory : /oscar/data/dharri15/eaguerov/examples/openfoam/openfoam-TPP
+##   Job Started : Wed Jan 21 09:39:03 AM EST 2026
+###############################################################################
+------------------------------------------------------------
+Action: video | Case: case_H0.208_D0.2_flat_R0.004_f1.88_d20.0_m0.009
+Date: $(date)
+/oscar/data/dharri15/eaguerov/examples/openfoam/openfoam-TPP/sloshing/lib/python3.13/site-packages/pyvista/plotting/utilities/xvfb.py:48: PyVistaDeprecationWarning: This function is deprecated and will be removed in future version of PyVista. Use vtk-osmesa instead.
+  warnings.warn(
+/usr/bin/which: no Xvfb in (/oscar/data/dharri15/eaguerov/examples/openfoam/openfoam-TPP/sloshing/bin:/oscar/rt/9.6/25/spack/x86_64_v3/python-3.13.5-dz6tni4uhljueyq5uhxuhlrvjovmlu4v/bin:/oscar/rt/9.6/25/spack/x86_64_v3/util-linux-uuid-2.41-b6m34ofikpubr4abkpue6zkamw7wrkoz/bin:/oscar/rt/9.6/25/spack/x86_64_v3/gettext-0.23.1-qgq45zfqfly7kiht2clec6ui7dvarzfh/bin:/oscar/rt/9.6/25/spack/x86_64_v3/tar-1.35-xn6abvafin5trttt2fcn4tgymoy4y7eb/bin:/oscar/rt/9.6/25/spack/x86_64_v3/pigz-2.8-ufy2qd7cyjh4uf6h3t7odtr2wsgmdzus/bin:/oscar/rt/9.6/25/spack/x86_64_v3/zstd-1.5.7-v3mtk5cdocaie3frjl2xpy3hmdf4c2hx/bin:/oscar/rt/9.6/25/spack/x86_64_v3/bzip2-1.0.8-raqrlgz3litxmiwewy2k5jxop3cdqhgd/bin:/oscar/rt/9.6/25/spack/x86_64_v3/libxml2-2.13.5-ikrc2oz3yw7m5qpes5twx2hvsgudxlrw/bin:/oscar/rt/9.6/25/spack/x86_64_v3/libiconv-1.18-ifc5abub2utg4iaqlvmeze7cfpxtn7b2/bin:/oscar/rt/9.6/25/spack/x86_64_v3/sqlite-3.46.0-pwg7tka36sc5abuw7l637zgwrvk63tu3/bin:/oscar/rt/9.6/25/spack/x86_64_v3/xz-5.6.3-pvai5g6lrfujwtylklrvke4cdzd3uycf/bin:/oscar/rt/9.6/25/spack/x86_64_v3/gdbm-1.23-vqwxkvvlbdxdvdiwgd7zr2jvyve5coee/bin:/oscar/rt/9.6/25/spack/x86_64_v3/readline-8.2-5n2wzk7kvcggihnbjn2bfnrne2vdpv4n/bin:/oscar/rt/9.6/25/spack/x86_64_v3/expat-2.7.1-54ppch23fr6gr7dladmvnh2t34exgfq4/bin:/oscar/rt/9.6/25/spack/x86_64_v3/ncurses-6.5-a5exz35j3ap6t6c7kn7jltjv4gh35top/bin:/oscar/runtime/bin:/usr/local/bin:/usr/bin:/usr/local/sbin:/usr/sbin:/usr/lpp/mmfs/bin:/usr/lpp/mmfs/sbin:/users/eaguerov/bin)
+[0m[33m2026-01-21 09:39:05.617 (   1.927s) [    7F2E5CF6B240]vtkXOpenGLRenderWindow.:1458  WARN| bad X server connection. DISPLAY=localhost:17.0[0m
+                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                              🎬 Generating video for case_H0.208_D0.2_flat_R0.004_f1.88_d20.0_m0.009 using PyVista...
+  Found 401 timesteps.
+    - Generating 3D perspective video...
+      Rendered 3D frame 20/401
+      Rendered 3D frame 40/401
+      Rendered 3D frame 60/401
+      Rendered 3D frame 80/401
+      Rendered 3D frame 100/401
+      Rendered 3D frame 120/401
+      Rendered 3D frame 140/401
+      Rendered 3D frame 160/401
+      Rendered 3D frame 180/401
+      Rendered 3D frame 200/401
+      Rendered 3D frame 220/401
+      Rendered 3D frame 240/401
+      Rendered 3D frame 260/401
+      Rendered 3D frame 280/401
+      Rendered 3D frame 300/401
+      Rendered 3D frame 320/401
+      Rendered 3D frame 340/401
+      Rendered 3D frame 360/401
+      Rendered 3D frame 380/401
+      Rendered 3D frame 400/401
+      ✅ Saved: animation_3d.mp4
+End: $(date)
+------------------------------------------------------------
+## SLURM PROLOG ###############################################################
+##    Job ID : 120089
+##  Job Name : post_video_case_H0.208_D0.2_flat_R0.004_f1.88_d20.0_m0.009
+##  Nodelist : node2335
+##      CPUs : 1
+##  Mem/Node : 8192 MB
+## Directory : /oscar/data/dharri15/eaguerov/examples/openfoam/openfoam-TPP
+##   Job Started : Wed Jan 21 11:56:50 AM EST 2026
+###############################################################################
+------------------------------------------------------------
+Action: video | Case: case_H0.208_D0.2_flat_R0.004_f1.88_d20.0_m0.009
+Date: $(date)
+/oscar/data/dharri15/eaguerov/examples/openfoam/openfoam-TPP/sloshing/lib/python3.13/site-packages/pyvista/plotting/utilities/xvfb.py:48: PyVistaDeprecationWarning: This function is deprecated and will be removed in future version of PyVista. Use vtk-osmesa instead.
+  warnings.warn(
+/usr/bin/which: no Xvfb in (/oscar/data/dharri15/eaguerov/examples/openfoam/openfoam-TPP/sloshing/bin:/oscar/runtime/bin:/usr/local/bin:/usr/bin:/usr/local/sbin:/usr/sbin:/oscar/runtime/bin:/users/eaguerov/bin)
+[0m[33m2026-01-21 11:56:58.851 (   5.885s) [    7FF7813AA240]vtkXOpenGLRenderWindow.:1458  WARN| bad X server connection. DISPLAY=localhost:10.0[0m
+                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                      🎬 Generating video for case_H0.208_D0.2_flat_R0.004_f1.88_d20.0_m0.009 using PyVista...
+  Found 401 timesteps.
+    - Generating 3D perspective video...
+      Rendered 3D frame 20/401
+      Rendered 3D frame 40/401
+      Rendered 3D frame 60/401
+      Rendered 3D frame 80/401
+      Rendered 3D frame 100/401
+      Rendered 3D frame 120/401
+      Rendered 3D frame 140/401
+      Rendered 3D frame 160/401
+      Rendered 3D frame 180/401
+      Rendered 3D frame 200/401
+      Rendered 3D frame 220/401
+      Rendered 3D frame 240/401
+      Rendered 3D frame 260/401
+      Rendered 3D frame 280/401
+      Rendered 3D frame 300/401
+      Rendered 3D frame 320/401
+      Rendered 3D frame 340/401
+      Rendered 3D frame 360/401
+      Rendered 3D frame 380/401
+      Rendered 3D frame 400/401
+      ✅ Saved: animation_3d.mp4
+End: $(date)
+------------------------------------------------------------
+## SLURM PROLOG ###############################################################
+##    Job ID : 120577
+##  Job Name : post_video_case_H0.208_D0.2_flat_R0.004_f1.88_d20.0_m0.009
+##  Nodelist : node2335
+##      CPUs : 1
+##  Mem/Node : 8192 MB
+## Directory : /oscar/data/dharri15/eaguerov/examples/openfoam/openfoam-TPP
+##   Job Started : Wed Jan 21 12:54:54 PM EST 2026
+###############################################################################
+------------------------------------------------------------
+Action: video | Case: case_H0.208_D0.2_flat_R0.004_f1.88_d20.0_m0.009
+Date: $(date)
+
+❌ Error: Critical dependency missing in virtual environment: No module named 'pyvista'
+Try deleting the 'sloshing' directory and running again.
+## SLURM PROLOG ###############################################################
+##    Job ID : 120579
+##  Job Name : post_flow_case_H0.208_D0.2_flat_R0.004_f1.88_d20.0_m0.009
+##  Nodelist : node2335
+##      CPUs : 1
+##  Mem/Node : 8192 MB
+## Directory : /oscar/data/dharri15/eaguerov/examples/openfoam/openfoam-TPP
+##   Job Started : Wed Jan 21 12:55:01 PM EST 2026
+###############################################################################
+------------------------------------------------------------
+Action: flow | Case: case_H0.208_D0.2_flat_R0.004_f1.88_d20.0_m0.009
+Date: $(date)
+
+❌ Error: Critical dependency missing in virtual environment: No module named 'pyvista'
+Try deleting the 'sloshing' directory and running again.
+## SLURM PROLOG ###############################################################
+##    Job ID : 120608
+##  Job Name : post_flow_case_H0.208_D0.2_flat_R0.004_f1.88_d20.0_m0.009
+##  Nodelist : node2337
+##      CPUs : 1
+##  Mem/Node : 8192 MB
+## Directory : /oscar/data/dharri15/eaguerov/examples/openfoam/openfoam-TPP
+##   Job Started : Wed Jan 21 01:04:35 PM EST 2026
+###############################################################################
+------------------------------------------------------------
+Action: flow | Case: case_H0.208_D0.2_flat_R0.004_f1.88_d20.0_m0.009
+Date: $(date)
+WARNING: Disabling truststore since ssl support is missing
+WARNING: pip is configured with locations that require TLS/SSL, however the ssl module in Python is not available.
+Requirement already satisfied: numpy>=1.24.0 in ./sloshing/lib/python3.13/site-packages (from -r /oscar/data/dharri15/eaguerov/examples/openfoam/openfoam-TPP/requirements.txt (line 2)) (2.4.1)
+Requirement already satisfied: scipy>=1.10.0 in ./sloshing/lib/python3.13/site-packages (from -r /oscar/data/dharri15/eaguerov/examples/openfoam/openfoam-TPP/requirements.txt (line 3)) (1.17.0)
+Requirement already satisfied: matplotlib>=3.7.0 in ./sloshing/lib/python3.13/site-packages (from -r /oscar/data/dharri15/eaguerov/examples/openfoam/openfoam-TPP/requirements.txt (line 4)) (3.10.8)
+Requirement already satisfied: pyvista>=0.43.0 in ./sloshing/lib/python3.13/site-packages (from -r /oscar/data/dharri15/eaguerov/examples/openfoam/openfoam-TPP/requirements.txt (line 5)) (0.46.5)
+Requirement already satisfied: imageio>=2.33.0 in ./sloshing/lib/python3.13/site-packages (from -r /oscar/data/dharri15/eaguerov/examples/openfoam/openfoam-TPP/requirements.txt (line 6)) (2.37.2)
+Requirement already satisfied: imageio-ffmpeg>=0.4.9 in ./sloshing/lib/python3.13/site-packages (from -r /oscar/data/dharri15/eaguerov/examples/openfoam/openfoam-TPP/requirements.txt (line 7)) (0.6.0)
+Requirement already satisfied: h5py>=3.10.0 in ./sloshing/lib/python3.13/site-packages (from -r /oscar/data/dharri15/eaguerov/examples/openfoam/openfoam-TPP/requirements.txt (line 8)) (3.15.1)
+Requirement already satisfied: contourpy>=1.0.1 in ./sloshing/lib/python3.13/site-packages (from matplotlib>=3.7.0->-r /oscar/data/dharri15/eaguerov/examples/openfoam/openfoam-TPP/requirements.txt (line 4)) (1.3.3)
+Requirement already satisfied: cycler>=0.10 in ./sloshing/lib/python3.13/site-packages (from matplotlib>=3.7.0->-r /oscar/data/dharri15/eaguerov/examples/openfoam/openfoam-TPP/requirements.txt (line 4)) (0.12.1)
+Requirement already satisfied: fonttools>=4.22.0 in ./sloshing/lib/python3.13/site-packages (from matplotlib>=3.7.0->-r /oscar/data/dharri15/eaguerov/examples/openfoam/openfoam-TPP/requirements.txt (line 4)) (4.61.1)
+Requirement already satisfied: kiwisolver>=1.3.1 in ./sloshing/lib/python3.13/site-packages (from matplotlib>=3.7.0->-r /oscar/data/dharri15/eaguerov/examples/openfoam/openfoam-TPP/requirements.txt (line 4)) (1.4.9)
+Requirement already satisfied: packaging>=20.0 in ./sloshing/lib/python3.13/site-packages (from matplotlib>=3.7.0->-r /oscar/data/dharri15/eaguerov/examples/openfoam/openfoam-TPP/requirements.txt (line 4)) (25.0)
+Requirement already satisfied: pillow>=8 in ./sloshing/lib/python3.13/site-packages (from matplotlib>=3.7.0->-r /oscar/data/dharri15/eaguerov/examples/openfoam/openfoam-TPP/requirements.txt (line 4)) (12.1.0)
+Requirement already satisfied: pyparsing>=3 in ./sloshing/lib/python3.13/site-packages (from matplotlib>=3.7.0->-r /oscar/data/dharri15/eaguerov/examples/openfoam/openfoam-TPP/requirements.txt (line 4)) (3.3.1)
+Requirement already satisfied: python-dateutil>=2.7 in ./sloshing/lib/python3.13/site-packages (from matplotlib>=3.7.0->-r /oscar/data/dharri15/eaguerov/examples/openfoam/openfoam-TPP/requirements.txt (line 4)) (2.9.0.post0)
+Requirement already satisfied: pooch in ./sloshing/lib/python3.13/site-packages (from pyvista>=0.43.0->-r /oscar/data/dharri15/eaguerov/examples/openfoam/openfoam-TPP/requirements.txt (line 5)) (1.8.2)
+Requirement already satisfied: scooby>=0.5.1 in ./sloshing/lib/python3.13/site-packages (from pyvista>=0.43.0->-r /oscar/data/dharri15/eaguerov/examples/openfoam/openfoam-TPP/requirements.txt (line 5)) (0.11.0)
+Requirement already satisfied: typing-extensions>=4.10 in ./sloshing/lib/python3.13/site-packages (from pyvista>=0.43.0->-r /oscar/data/dharri15/eaguerov/examples/openfoam/openfoam-TPP/requirements.txt (line 5)) (4.15.0)
+Requirement already satisfied: vtk!=9.4.0 in ./sloshing/lib/python3.13/site-packages (from pyvista>=0.43.0->-r /oscar/data/dharri15/eaguerov/examples/openfoam/openfoam-TPP/requirements.txt (line 5)) (9.5.2)
+Requirement already satisfied: six>=1.5 in ./sloshing/lib/python3.13/site-packages (from python-dateutil>=2.7->matplotlib>=3.7.0->-r /oscar/data/dharri15/eaguerov/examples/openfoam/openfoam-TPP/requirements.txt (line 4)) (1.17.0)
+Requirement already satisfied: platformdirs>=2.5.0 in ./sloshing/lib/python3.13/site-packages (from pooch->pyvista>=0.43.0->-r /oscar/data/dharri15/eaguerov/examples/openfoam/openfoam-TPP/requirements.txt (line 5)) (4.5.1)
+Requirement already satisfied: requests>=2.19.0 in ./sloshing/lib/python3.13/site-packages (from pooch->pyvista>=0.43.0->-r /oscar/data/dharri15/eaguerov/examples/openfoam/openfoam-TPP/requirements.txt (line 5)) (2.32.5)
+Requirement already satisfied: charset_normalizer<4,>=2 in ./sloshing/lib/python3.13/site-packages (from requests>=2.19.0->pooch->pyvista>=0.43.0->-r /oscar/data/dharri15/eaguerov/examples/openfoam/openfoam-TPP/requirements.txt (line 5)) (3.4.4)
+Requirement already satisfied: idna<4,>=2.5 in ./sloshing/lib/python3.13/site-packages (from requests>=2.19.0->pooch->pyvista>=0.43.0->-r /oscar/data/dharri15/eaguerov/examples/openfoam/openfoam-TPP/requirements.txt (line 5)) (3.11)
+Requirement already satisfied: urllib3<3,>=1.21.1 in ./sloshing/lib/python3.13/site-packages (from requests>=2.19.0->pooch->pyvista>=0.43.0->-r /oscar/data/dharri15/eaguerov/examples/openfoam/openfoam-TPP/requirements.txt (line 5)) (2.6.3)
+Requirement already satisfied: certifi>=2017.4.17 in ./sloshing/lib/python3.13/site-packages (from requests>=2.19.0->pooch->pyvista>=0.43.0->-r /oscar/data/dharri15/eaguerov/examples/openfoam/openfoam-TPP/requirements.txt (line 5)) (2026.1.4)
+
+[notice] A new release of pip is available: 25.1.1 -> 25.3
+[notice] To update, run: pip3.13 install --upgrade pip
+  📐 Generating potential flow prediction for case_H0.208_D0.2_flat_R0.004_f1.88_d20.0_m0.009...
+
+============================================================
+  Potential Flow Theory Prediction
+============================================================
+  Cylinder Radius (R):       0.1000 m
+  Orbital Radius (a):        0.0040 m
+  Forcing Frequency (f):     1.8800 Hz
+  Angular Frequency (ω):     11.8124 rad/s
+  Liquid Depth (d):          0.1040 m
+  Froude Number (F):         0.056894
+------------------------------------------------------------
+  Wall Amplitude (A_PT):     3.146940e-02 m
+  Crest-to-Trough (Δh_PT):   6.293879e-02 m
+------------------------------------------------------------
+  Modes Used:                30
+  Output File:               case_H0.208_D0.2_flat_R0.004_f1.88_d20.0_m0.009/postProcessing/potential_flow/potential_flow_wall.csv
+============================================================
+
+  ✅ Potential flow data saved: case_H0.208_D0.2_flat_R0.004_f1.88_d20.0_m0.009/postProcessing/potential_flow/potential_flow_wall.csv
+  🎬 Generating potential flow animation...
+    - Generating 3D moving mesh animation...
+      ❌ Warning: Failed to save potential_flow_3d.mp4: name 'zeta_t' is not defined
+    - Generating analysis dashboard animation...
+      ✅ Saved: potential_flow_dashboard.mp4
+  ✅ Animation saved: case_H0.208_D0.2_flat_R0.004_f1.88_d20.0_m0.009/postProcessing/potential_flow/postProcessing/potential_flow
+End: $(date)
+------------------------------------------------------------
+## SLURM PROLOG ###############################################################
+##    Job ID : 120769
+##  Job Name : post_video_case_H0.208_D0.2_flat_R0.004_f1.88_d20.0_m0.009
+##  Nodelist : node2335
+##      CPUs : 1
+##  Mem/Node : 8192 MB
+## Directory : /oscar/data/dharri15/eaguerov/examples/openfoam/openfoam-TPP
+##   Job Started : Wed Jan 21 01:13:59 PM EST 2026
+###############################################################################
+------------------------------------------------------------
+Action: video | Case: case_H0.208_D0.2_flat_R0.004_f1.88_d20.0_m0.009
+Date: $(date)
+WARNING: Disabling truststore since ssl support is missing
+WARNING: pip is configured with locations that require TLS/SSL, however the ssl module in Python is not available.
+Requirement already satisfied: numpy>=1.24.0 in ./sloshing/lib/python3.13/site-packages (from -r /oscar/data/dharri15/eaguerov/examples/openfoam/openfoam-TPP/requirements.txt (line 2)) (2.4.1)
+Requirement already satisfied: scipy>=1.10.0 in ./sloshing/lib/python3.13/site-packages (from -r /oscar/data/dharri15/eaguerov/examples/openfoam/openfoam-TPP/requirements.txt (line 3)) (1.17.0)
+Requirement already satisfied: matplotlib>=3.7.0 in ./sloshing/lib/python3.13/site-packages (from -r /oscar/data/dharri15/eaguerov/examples/openfoam/openfoam-TPP/requirements.txt (line 4)) (3.10.8)
+Requirement already satisfied: pyvista>=0.43.0 in ./sloshing/lib/python3.13/site-packages (from -r /oscar/data/dharri15/eaguerov/examples/openfoam/openfoam-TPP/requirements.txt (line 5)) (0.46.5)
+Requirement already satisfied: imageio>=2.33.0 in ./sloshing/lib/python3.13/site-packages (from -r /oscar/data/dharri15/eaguerov/examples/openfoam/openfoam-TPP/requirements.txt (line 6)) (2.37.2)
+Requirement already satisfied: imageio-ffmpeg>=0.4.9 in ./sloshing/lib/python3.13/site-packages (from -r /oscar/data/dharri15/eaguerov/examples/openfoam/openfoam-TPP/requirements.txt (line 7)) (0.6.0)
+Requirement already satisfied: h5py>=3.10.0 in ./sloshing/lib/python3.13/site-packages (from -r /oscar/data/dharri15/eaguerov/examples/openfoam/openfoam-TPP/requirements.txt (line 8)) (3.15.1)
+Requirement already satisfied: contourpy>=1.0.1 in ./sloshing/lib/python3.13/site-packages (from matplotlib>=3.7.0->-r /oscar/data/dharri15/eaguerov/examples/openfoam/openfoam-TPP/requirements.txt (line 4)) (1.3.3)
+Requirement already satisfied: cycler>=0.10 in ./sloshing/lib/python3.13/site-packages (from matplotlib>=3.7.0->-r /oscar/data/dharri15/eaguerov/examples/openfoam/openfoam-TPP/requirements.txt (line 4)) (0.12.1)
+Requirement already satisfied: fonttools>=4.22.0 in ./sloshing/lib/python3.13/site-packages (from matplotlib>=3.7.0->-r /oscar/data/dharri15/eaguerov/examples/openfoam/openfoam-TPP/requirements.txt (line 4)) (4.61.1)
+Requirement already satisfied: kiwisolver>=1.3.1 in ./sloshing/lib/python3.13/site-packages (from matplotlib>=3.7.0->-r /oscar/data/dharri15/eaguerov/examples/openfoam/openfoam-TPP/requirements.txt (line 4)) (1.4.9)
+Requirement already satisfied: packaging>=20.0 in ./sloshing/lib/python3.13/site-packages (from matplotlib>=3.7.0->-r /oscar/data/dharri15/eaguerov/examples/openfoam/openfoam-TPP/requirements.txt (line 4)) (25.0)
+Requirement already satisfied: pillow>=8 in ./sloshing/lib/python3.13/site-packages (from matplotlib>=3.7.0->-r /oscar/data/dharri15/eaguerov/examples/openfoam/openfoam-TPP/requirements.txt (line 4)) (12.1.0)
+Requirement already satisfied: pyparsing>=3 in ./sloshing/lib/python3.13/site-packages (from matplotlib>=3.7.0->-r /oscar/data/dharri15/eaguerov/examples/openfoam/openfoam-TPP/requirements.txt (line 4)) (3.3.1)
+Requirement already satisfied: python-dateutil>=2.7 in ./sloshing/lib/python3.13/site-packages (from matplotlib>=3.7.0->-r /oscar/data/dharri15/eaguerov/examples/openfoam/openfoam-TPP/requirements.txt (line 4)) (2.9.0.post0)
+Requirement already satisfied: pooch in ./sloshing/lib/python3.13/site-packages (from pyvista>=0.43.0->-r /oscar/data/dharri15/eaguerov/examples/openfoam/openfoam-TPP/requirements.txt (line 5)) (1.8.2)
+Requirement already satisfied: scooby>=0.5.1 in ./sloshing/lib/python3.13/site-packages (from pyvista>=0.43.0->-r /oscar/data/dharri15/eaguerov/examples/openfoam/openfoam-TPP/requirements.txt (line 5)) (0.11.0)
+Requirement already satisfied: typing-extensions>=4.10 in ./sloshing/lib/python3.13/site-packages (from pyvista>=0.43.0->-r /oscar/data/dharri15/eaguerov/examples/openfoam/openfoam-TPP/requirements.txt (line 5)) (4.15.0)
+Requirement already satisfied: vtk!=9.4.0 in ./sloshing/lib/python3.13/site-packages (from pyvista>=0.43.0->-r /oscar/data/dharri15/eaguerov/examples/openfoam/openfoam-TPP/requirements.txt (line 5)) (9.5.2)
+Requirement already satisfied: six>=1.5 in ./sloshing/lib/python3.13/site-packages (from python-dateutil>=2.7->matplotlib>=3.7.0->-r /oscar/data/dharri15/eaguerov/examples/openfoam/openfoam-TPP/requirements.txt (line 4)) (1.17.0)
+Requirement already satisfied: platformdirs>=2.5.0 in ./sloshing/lib/python3.13/site-packages (from pooch->pyvista>=0.43.0->-r /oscar/data/dharri15/eaguerov/examples/openfoam/openfoam-TPP/requirements.txt (line 5)) (4.5.1)
+Requirement already satisfied: requests>=2.19.0 in ./sloshing/lib/python3.13/site-packages (from pooch->pyvista>=0.43.0->-r /oscar/data/dharri15/eaguerov/examples/openfoam/openfoam-TPP/requirements.txt (line 5)) (2.32.5)
+Requirement already satisfied: charset_normalizer<4,>=2 in ./sloshing/lib/python3.13/site-packages (from requests>=2.19.0->pooch->pyvista>=0.43.0->-r /oscar/data/dharri15/eaguerov/examples/openfoam/openfoam-TPP/requirements.txt (line 5)) (3.4.4)
+Requirement already satisfied: idna<4,>=2.5 in ./sloshing/lib/python3.13/site-packages (from requests>=2.19.0->pooch->pyvista>=0.43.0->-r /oscar/data/dharri15/eaguerov/examples/openfoam/openfoam-TPP/requirements.txt (line 5)) (3.11)
+Requirement already satisfied: urllib3<3,>=1.21.1 in ./sloshing/lib/python3.13/site-packages (from requests>=2.19.0->pooch->pyvista>=0.43.0->-r /oscar/data/dharri15/eaguerov/examples/openfoam/openfoam-TPP/requirements.txt (line 5)) (2.6.3)
+Requirement already satisfied: certifi>=2017.4.17 in ./sloshing/lib/python3.13/site-packages (from requests>=2.19.0->pooch->pyvista>=0.43.0->-r /oscar/data/dharri15/eaguerov/examples/openfoam/openfoam-TPP/requirements.txt (line 5)) (2026.1.4)
+
+[notice] A new release of pip is available: 25.1.1 -> 25.3
+[notice] To update, run: pip3.13 install --upgrade pip
+/oscar/data/dharri15/eaguerov/examples/openfoam/openfoam-TPP/sloshing/lib/python3.13/site-packages/pyvista/plotting/utilities/xvfb.py:48: PyVistaDeprecationWarning: This function is deprecated and will be removed in future version of PyVista. Use vtk-osmesa instead.
+  warnings.warn(
+/usr/bin/which: no Xvfb in (/users/eaguerov/conda-envs/tools/bin:/oscar/rt/9.6/25/spack/x86_64_v3/anaconda3-2023.09-0-aqbcryind6ewgctu7wijluakv5mo3lo5/condabin:/oscar/rt/9.6/25/spack/x86_64_v3/anaconda3-2023.09-0-aqbcryind6ewgctu7wijluakv5mo3lo5/bin:/oscar/data/dharri15/eaguerov/examples/openfoam/openfoam-TPP/sloshing/bin:/oscar/runtime/bin:/usr/local/bin:/usr/bin:/usr/local/sbin:/usr/sbin:/users/eaguerov/bin)
+[0m[33m2026-01-21 13:14:04.066 (   1.956s) [    7F9C3A8C6240]vtkXOpenGLRenderWindow.:1458  WARN| bad X server connection. DISPLAY=localhost:10.0[0m
+  🎬 Generating video for case_H0.208_D0.2_flat_R0.004_f1.88_d20.0_m0.009 using PyVista...
+  Found 401 timesteps.
+    - Generating 3D perspective video...
+      Rendered 3D frame 20/401
+      Rendered 3D frame 40/401
+      Rendered 3D frame 60/401
+      Rendered 3D frame 80/401
+      Rendered 3D frame 100/401
+      Rendered 3D frame 120/401
+      Rendered 3D frame 140/401
+      Rendered 3D frame 160/401
+      Rendered 3D frame 180/401
+      Rendered 3D frame 200/401
+      Rendered 3D frame 220/401
+      Rendered 3D frame 240/401
+      Rendered 3D frame 260/401
+      Rendered 3D frame 280/401
+      Rendered 3D frame 300/401
+      Rendered 3D frame 320/401
+      Rendered 3D frame 340/401
+      Rendered 3D frame 360/401
+      Rendered 3D frame 380/401
+      Rendered 3D frame 400/401
+      ✅ Saved: animation_3d.mp4
+End: $(date)
+------------------------------------------------------------
+## SLURM PROLOG ###############################################################
+##    Job ID : 121831
+##  Job Name : post_flow_case_H0.208_D0.2_flat_R0.004_f1.88_d20.0_m0.009
+##  Nodelist : node2333
+##      CPUs : 1
+##  Mem/Node : 8192 MB
+## Directory : /oscar/data/dharri15/eaguerov/examples/openfoam/openfoam-TPP
+##   Job Started : Wed Jan 21 02:27:02 PM EST 2026
+###############################################################################
+------------------------------------------------------------
+Action: flow | Case: case_H0.208_D0.2_flat_R0.004_f1.88_d20.0_m0.009
+Date: $(date)
+WARNING: Disabling truststore since ssl support is missing
+WARNING: pip is configured with locations that require TLS/SSL, however the ssl module in Python is not available.
+Requirement already satisfied: numpy>=1.24.0 in ./sloshing/lib/python3.13/site-packages (from -r /oscar/data/dharri15/eaguerov/examples/openfoam/openfoam-TPP/requirements.txt (line 2)) (2.4.1)
+Requirement already satisfied: scipy>=1.10.0 in ./sloshing/lib/python3.13/site-packages (from -r /oscar/data/dharri15/eaguerov/examples/openfoam/openfoam-TPP/requirements.txt (line 3)) (1.17.0)
+Requirement already satisfied: matplotlib>=3.7.0 in ./sloshing/lib/python3.13/site-packages (from -r /oscar/data/dharri15/eaguerov/examples/openfoam/openfoam-TPP/requirements.txt (line 4)) (3.10.8)
+Requirement already satisfied: pyvista>=0.43.0 in ./sloshing/lib/python3.13/site-packages (from -r /oscar/data/dharri15/eaguerov/examples/openfoam/openfoam-TPP/requirements.txt (line 5)) (0.46.5)
+Requirement already satisfied: imageio>=2.33.0 in ./sloshing/lib/python3.13/site-packages (from -r /oscar/data/dharri15/eaguerov/examples/openfoam/openfoam-TPP/requirements.txt (line 6)) (2.37.2)
+Requirement already satisfied: imageio-ffmpeg>=0.4.9 in ./sloshing/lib/python3.13/site-packages (from -r /oscar/data/dharri15/eaguerov/examples/openfoam/openfoam-TPP/requirements.txt (line 7)) (0.6.0)
+Requirement already satisfied: h5py>=3.10.0 in ./sloshing/lib/python3.13/site-packages (from -r /oscar/data/dharri15/eaguerov/examples/openfoam/openfoam-TPP/requirements.txt (line 8)) (3.15.1)
+Requirement already satisfied: contourpy>=1.0.1 in ./sloshing/lib/python3.13/site-packages (from matplotlib>=3.7.0->-r /oscar/data/dharri15/eaguerov/examples/openfoam/openfoam-TPP/requirements.txt (line 4)) (1.3.3)
+Requirement already satisfied: cycler>=0.10 in ./sloshing/lib/python3.13/site-packages (from matplotlib>=3.7.0->-r /oscar/data/dharri15/eaguerov/examples/openfoam/openfoam-TPP/requirements.txt (line 4)) (0.12.1)
+Requirement already satisfied: fonttools>=4.22.0 in ./sloshing/lib/python3.13/site-packages (from matplotlib>=3.7.0->-r /oscar/data/dharri15/eaguerov/examples/openfoam/openfoam-TPP/requirements.txt (line 4)) (4.61.1)
+Requirement already satisfied: kiwisolver>=1.3.1 in ./sloshing/lib/python3.13/site-packages (from matplotlib>=3.7.0->-r /oscar/data/dharri15/eaguerov/examples/openfoam/openfoam-TPP/requirements.txt (line 4)) (1.4.9)
+Requirement already satisfied: packaging>=20.0 in ./sloshing/lib/python3.13/site-packages (from matplotlib>=3.7.0->-r /oscar/data/dharri15/eaguerov/examples/openfoam/openfoam-TPP/requirements.txt (line 4)) (25.0)
+Requirement already satisfied: pillow>=8 in ./sloshing/lib/python3.13/site-packages (from matplotlib>=3.7.0->-r /oscar/data/dharri15/eaguerov/examples/openfoam/openfoam-TPP/requirements.txt (line 4)) (12.1.0)
+Requirement already satisfied: pyparsing>=3 in ./sloshing/lib/python3.13/site-packages (from matplotlib>=3.7.0->-r /oscar/data/dharri15/eaguerov/examples/openfoam/openfoam-TPP/requirements.txt (line 4)) (3.3.1)
+Requirement already satisfied: python-dateutil>=2.7 in ./sloshing/lib/python3.13/site-packages (from matplotlib>=3.7.0->-r /oscar/data/dharri15/eaguerov/examples/openfoam/openfoam-TPP/requirements.txt (line 4)) (2.9.0.post0)
+Requirement already satisfied: pooch in ./sloshing/lib/python3.13/site-packages (from pyvista>=0.43.0->-r /oscar/data/dharri15/eaguerov/examples/openfoam/openfoam-TPP/requirements.txt (line 5)) (1.8.2)
+Requirement already satisfied: scooby>=0.5.1 in ./sloshing/lib/python3.13/site-packages (from pyvista>=0.43.0->-r /oscar/data/dharri15/eaguerov/examples/openfoam/openfoam-TPP/requirements.txt (line 5)) (0.11.0)
+Requirement already satisfied: typing-extensions>=4.10 in ./sloshing/lib/python3.13/site-packages (from pyvista>=0.43.0->-r /oscar/data/dharri15/eaguerov/examples/openfoam/openfoam-TPP/requirements.txt (line 5)) (4.15.0)
+Requirement already satisfied: vtk!=9.4.0 in ./sloshing/lib/python3.13/site-packages (from pyvista>=0.43.0->-r /oscar/data/dharri15/eaguerov/examples/openfoam/openfoam-TPP/requirements.txt (line 5)) (9.5.2)
+Requirement already satisfied: six>=1.5 in ./sloshing/lib/python3.13/site-packages (from python-dateutil>=2.7->matplotlib>=3.7.0->-r /oscar/data/dharri15/eaguerov/examples/openfoam/openfoam-TPP/requirements.txt (line 4)) (1.17.0)
+Requirement already satisfied: platformdirs>=2.5.0 in ./sloshing/lib/python3.13/site-packages (from pooch->pyvista>=0.43.0->-r /oscar/data/dharri15/eaguerov/examples/openfoam/openfoam-TPP/requirements.txt (line 5)) (4.5.1)
+Requirement already satisfied: requests>=2.19.0 in ./sloshing/lib/python3.13/site-packages (from pooch->pyvista>=0.43.0->-r /oscar/data/dharri15/eaguerov/examples/openfoam/openfoam-TPP/requirements.txt (line 5)) (2.32.5)
+Requirement already satisfied: charset_normalizer<4,>=2 in ./sloshing/lib/python3.13/site-packages (from requests>=2.19.0->pooch->pyvista>=0.43.0->-r /oscar/data/dharri15/eaguerov/examples/openfoam/openfoam-TPP/requirements.txt (line 5)) (3.4.4)
+Requirement already satisfied: idna<4,>=2.5 in ./sloshing/lib/python3.13/site-packages (from requests>=2.19.0->pooch->pyvista>=0.43.0->-r /oscar/data/dharri15/eaguerov/examples/openfoam/openfoam-TPP/requirements.txt (line 5)) (3.11)
+Requirement already satisfied: urllib3<3,>=1.21.1 in ./sloshing/lib/python3.13/site-packages (from requests>=2.19.0->pooch->pyvista>=0.43.0->-r /oscar/data/dharri15/eaguerov/examples/openfoam/openfoam-TPP/requirements.txt (line 5)) (2.6.3)
+Requirement already satisfied: certifi>=2017.4.17 in ./sloshing/lib/python3.13/site-packages (from requests>=2.19.0->pooch->pyvista>=0.43.0->-r /oscar/data/dharri15/eaguerov/examples/openfoam/openfoam-TPP/requirements.txt (line 5)) (2026.1.4)
+
+[notice] A new release of pip is available: 25.1.1 -> 25.3
+[notice] To update, run: pip3.13 install --upgrade pip
+## SLURM PROLOG ###############################################################
+##    Job ID : 121832
+##  Job Name : post_video_case_H0.208_D0.2_flat_R0.004_f1.88_d20.0_m0.009
+##  Nodelist : node2335
+##      CPUs : 1
+##  Mem/Node : 8192 MB
+## Directory : /oscar/data/dharri15/eaguerov/examples/openfoam/openfoam-TPP
+##   Job Started : Wed Jan 21 02:27:07 PM EST 2026
+###############################################################################
+------------------------------------------------------------
+Action: video | Case: case_H0.208_D0.2_flat_R0.004_f1.88_d20.0_m0.009
+Date: $(date)
+WARNING: Disabling truststore since ssl support is missing
+WARNING: pip is configured with locations that require TLS/SSL, however the ssl module in Python is not available.
+Requirement already satisfied: numpy>=1.24.0 in ./sloshing/lib/python3.13/site-packages (from -r /oscar/data/dharri15/eaguerov/examples/openfoam/openfoam-TPP/requirements.txt (line 2)) (2.4.1)
+Requirement already satisfied: scipy>=1.10.0 in ./sloshing/lib/python3.13/site-packages (from -r /oscar/data/dharri15/eaguerov/examples/openfoam/openfoam-TPP/requirements.txt (line 3)) (1.17.0)
+Requirement already satisfied: matplotlib>=3.7.0 in ./sloshing/lib/python3.13/site-packages (from -r /oscar/data/dharri15/eaguerov/examples/openfoam/openfoam-TPP/requirements.txt (line 4)) (3.10.8)
+Requirement already satisfied: pyvista>=0.43.0 in ./sloshing/lib/python3.13/site-packages (from -r /oscar/data/dharri15/eaguerov/examples/openfoam/openfoam-TPP/requirements.txt (line 5)) (0.46.5)
+Requirement already satisfied: imageio>=2.33.0 in ./sloshing/lib/python3.13/site-packages (from -r /oscar/data/dharri15/eaguerov/examples/openfoam/openfoam-TPP/requirements.txt (line 6)) (2.37.2)
+Requirement already satisfied: imageio-ffmpeg>=0.4.9 in ./sloshing/lib/python3.13/site-packages (from -r /oscar/data/dharri15/eaguerov/examples/openfoam/openfoam-TPP/requirements.txt (line 7)) (0.6.0)
+Requirement already satisfied: h5py>=3.10.0 in ./sloshing/lib/python3.13/site-packages (from -r /oscar/data/dharri15/eaguerov/examples/openfoam/openfoam-TPP/requirements.txt (line 8)) (3.15.1)
+Requirement already satisfied: contourpy>=1.0.1 in ./sloshing/lib/python3.13/site-packages (from matplotlib>=3.7.0->-r /oscar/data/dharri15/eaguerov/examples/openfoam/openfoam-TPP/requirements.txt (line 4)) (1.3.3)
+Requirement already satisfied: cycler>=0.10 in ./sloshing/lib/python3.13/site-packages (from matplotlib>=3.7.0->-r /oscar/data/dharri15/eaguerov/examples/openfoam/openfoam-TPP/requirements.txt (line 4)) (0.12.1)
+Requirement already satisfied: fonttools>=4.22.0 in ./sloshing/lib/python3.13/site-packages (from matplotlib>=3.7.0->-r /oscar/data/dharri15/eaguerov/examples/openfoam/openfoam-TPP/requirements.txt (line 4)) (4.61.1)
+Requirement already satisfied: kiwisolver>=1.3.1 in ./sloshing/lib/python3.13/site-packages (from matplotlib>=3.7.0->-r /oscar/data/dharri15/eaguerov/examples/openfoam/openfoam-TPP/requirements.txt (line 4)) (1.4.9)
+Requirement already satisfied: packaging>=20.0 in ./sloshing/lib/python3.13/site-packages (from matplotlib>=3.7.0->-r /oscar/data/dharri15/eaguerov/examples/openfoam/openfoam-TPP/requirements.txt (line 4)) (25.0)
+Requirement already satisfied: pillow>=8 in ./sloshing/lib/python3.13/site-packages (from matplotlib>=3.7.0->-r /oscar/data/dharri15/eaguerov/examples/openfoam/openfoam-TPP/requirements.txt (line 4)) (12.1.0)
+Requirement already satisfied: pyparsing>=3 in ./sloshing/lib/python3.13/site-packages (from matplotlib>=3.7.0->-r /oscar/data/dharri15/eaguerov/examples/openfoam/openfoam-TPP/requirements.txt (line 4)) (3.3.1)
+Requirement already satisfied: python-dateutil>=2.7 in ./sloshing/lib/python3.13/site-packages (from matplotlib>=3.7.0->-r /oscar/data/dharri15/eaguerov/examples/openfoam/openfoam-TPP/requirements.txt (line 4)) (2.9.0.post0)
+Requirement already satisfied: pooch in ./sloshing/lib/python3.13/site-packages (from pyvista>=0.43.0->-r /oscar/data/dharri15/eaguerov/examples/openfoam/openfoam-TPP/requirements.txt (line 5)) (1.8.2)
+Requirement already satisfied: scooby>=0.5.1 in ./sloshing/lib/python3.13/site-packages (from pyvista>=0.43.0->-r /oscar/data/dharri15/eaguerov/examples/openfoam/openfoam-TPP/requirements.txt (line 5)) (0.11.0)
+Requirement already satisfied: typing-extensions>=4.10 in ./sloshing/lib/python3.13/site-packages (from pyvista>=0.43.0->-r /oscar/data/dharri15/eaguerov/examples/openfoam/openfoam-TPP/requirements.txt (line 5)) (4.15.0)
+Requirement already satisfied: vtk!=9.4.0 in ./sloshing/lib/python3.13/site-packages (from pyvista>=0.43.0->-r /oscar/data/dharri15/eaguerov/examples/openfoam/openfoam-TPP/requirements.txt (line 5)) (9.5.2)
+Requirement already satisfied: six>=1.5 in ./sloshing/lib/python3.13/site-packages (from python-dateutil>=2.7->matplotlib>=3.7.0->-r /oscar/data/dharri15/eaguerov/examples/openfoam/openfoam-TPP/requirements.txt (line 4)) (1.17.0)
+Requirement already satisfied: platformdirs>=2.5.0 in ./sloshing/lib/python3.13/site-packages (from pooch->pyvista>=0.43.0->-r /oscar/data/dharri15/eaguerov/examples/openfoam/openfoam-TPP/requirements.txt (line 5)) (4.5.1)
+Requirement already satisfied: requests>=2.19.0 in ./sloshing/lib/python3.13/site-packages (from pooch->pyvista>=0.43.0->-r /oscar/data/dharri15/eaguerov/examples/openfoam/openfoam-TPP/requirements.txt (line 5)) (2.32.5)
+Requirement already satisfied: charset_normalizer<4,>=2 in ./sloshing/lib/python3.13/site-packages (from requests>=2.19.0->pooch->pyvista>=0.43.0->-r /oscar/data/dharri15/eaguerov/examples/openfoam/openfoam-TPP/requirements.txt (line 5)) (3.4.4)
+Requirement already satisfied: idna<4,>=2.5 in ./sloshing/lib/python3.13/site-packages (from requests>=2.19.0->pooch->pyvista>=0.43.0->-r /oscar/data/dharri15/eaguerov/examples/openfoam/openfoam-TPP/requirements.txt (line 5)) (3.11)
+Requirement already satisfied: urllib3<3,>=1.21.1 in ./sloshing/lib/python3.13/site-packages (from requests>=2.19.0->pooch->pyvista>=0.43.0->-r /oscar/data/dharri15/eaguerov/examples/openfoam/openfoam-TPP/requirements.txt (line 5)) (2.6.3)
+Requirement already satisfied: certifi>=2017.4.17 in ./sloshing/lib/python3.13/site-packages (from requests>=2.19.0->pooch->pyvista>=0.43.0->-r /oscar/data/dharri15/eaguerov/examples/openfoam/openfoam-TPP/requirements.txt (line 5)) (2026.1.4)
+
+[notice] A new release of pip is available: 25.1.1 -> 25.3
+[notice] To update, run: pip3.13 install --upgrade pip
+/oscar/data/dharri15/eaguerov/examples/openfoam/openfoam-TPP/sloshing/lib/python3.13/site-packages/pyvista/plotting/utilities/xvfb.py:48: PyVistaDeprecationWarning: This function is deprecated and will be removed in future version of PyVista. Use vtk-osmesa instead.
+  warnings.warn(
+/usr/bin/which: no Xvfb in (/users/eaguerov/conda-envs/tools/bin:/oscar/rt/9.6/25/spack/x86_64_v3/anaconda3-2023.09-0-aqbcryind6ewgctu7wijluakv5mo3lo5/condabin:/oscar/rt/9.6/25/spack/x86_64_v3/anaconda3-2023.09-0-aqbcryind6ewgctu7wijluakv5mo3lo5/bin:/oscar/data/dharri15/eaguerov/examples/openfoam/openfoam-TPP/sloshing/bin:/oscar/runtime/bin:/usr/local/bin:/usr/bin:/usr/local/sbin:/usr/sbin:/users/eaguerov/bin)
+[0m[33m2026-01-21 14:27:12.890 (   2.254s) [    7FC2D3B17240]vtkXOpenGLRenderWindow.:1458  WARN| bad X server connection. DISPLAY=localhost:10.0[0m
+  📐 Generating potential flow prediction for case_H0.208_D0.2_flat_R0.004_f1.88_d20.0_m0.009...
+
+============================================================
+  Potential Flow Theory Prediction
+============================================================
+  Cylinder Radius (R):       0.1000 m
+  Orbital Radius (a):        0.0040 m
+  Forcing Frequency (f):     1.8800 Hz
+  Angular Frequency (ω):     11.8124 rad/s
+  Liquid Depth (d):          0.1040 m
+  Froude Number (F):         0.056894
+------------------------------------------------------------
+  Wall Amplitude (A_PT):     3.146940e-02 m
+  Crest-to-Trough (Δh_PT):   6.293879e-02 m
+------------------------------------------------------------
+  Modes Used:                30
+  Output File:               case_H0.208_D0.2_flat_R0.004_f1.88_d20.0_m0.009/postProcessing/potential_flow/potential_flow_wall.csv
+============================================================
+
+  ✅ Potential flow data saved: case_H0.208_D0.2_flat_R0.004_f1.88_d20.0_m0.009/postProcessing/potential_flow/potential_flow_wall.csv
+  🎬 Generating potential flow animation...
+    - Generating 3D moving mesh animation in case_H0.208_D0.2_flat_R0.004_f1.88_d20.0_m0.009/postProcessing/potential_flow...
+      3D Animation Debug: Max Wall Amplitude = 3.146940e-02 m
+      ✅ Saved: potential_flow_3d.mp4
+    - Generating analysis dashboard animation in case_H0.208_D0.2_flat_R0.004_f1.88_d20.0_m0.009/postProcessing/potential_flow...
+      ✅ Saved: potential_flow_dashboard.mp4
+  ✅ Animation saved: case_H0.208_D0.2_flat_R0.004_f1.88_d20.0_m0.009/postProcessing/potential_flow
+End: $(date)
+------------------------------------------------------------
+  🎬 Generating video for case_H0.208_D0.2_flat_R0.004_f1.88_d20.0_m0.009 using PyVista...
+  Found 401 timesteps.
+    - Generating 3D perspective video...
+      Rendered 3D frame 20/401
+      Rendered 3D frame 40/401
+      Rendered 3D frame 60/401
+      Rendered 3D frame 80/401
+      Rendered 3D frame 100/401
+      Rendered 3D frame 120/401
+      Rendered 3D frame 140/401
+      Rendered 3D frame 160/401
+      Rendered 3D frame 180/401
+      Rendered 3D frame 200/401
+      Rendered 3D frame 220/401
+      Rendered 3D frame 240/401
+      Rendered 3D frame 260/401
+      Rendered 3D frame 280/401
+      Rendered 3D frame 300/401
+      Rendered 3D frame 320/401
+      Rendered 3D frame 340/401
+      Rendered 3D frame 360/401
+      Rendered 3D frame 380/401
+      Rendered 3D frame 400/401
+      ✅ Saved: animation_3d.mp4
+End: $(date)
+------------------------------------------------------------
+## SLURM PROLOG ###############################################################
+##    Job ID : 122222
+##  Job Name : post_flow_case_H0.208_D0.2_flat_R0.004_f1.88_d20.0_m0.009
+##  Nodelist : node2333
+##      CPUs : 1
+##  Mem/Node : 8192 MB
+## Directory : /oscar/data/dharri15/eaguerov/examples/openfoam/openfoam-TPP
+##   Job Started : Wed Jan 21 02:54:59 PM EST 2026
+###############################################################################
+------------------------------------------------------------
+Action: flow | Case: case_H0.208_D0.2_flat_R0.004_f1.88_d20.0_m0.009
+Date: $(date)
+
+❌ Error: Dependency 'numpy' failed to load.
+   Executable: /usr/bin/python3
+   Venv Path:  /oscar/data/dharri15/eaguerov/examples/openfoam/openfoam-TPP/sloshing
+
+   ⚠️  VENV MISMATCH DETECTED!
+   The 'sloshing' folder was likely created with a different Python version.
+   Current active python is: 3.9.21
+
+   ACTION REQUIRED: Please delete the broken virtual environment and restart:
+   rm -rf /oscar/data/dharri15/eaguerov/examples/openfoam/openfoam-TPP/sloshing
+## SLURM PROLOG ###############################################################
+##    Job ID : 122223
+##  Job Name : post_video_case_H0.208_D0.2_flat_R0.004_f1.88_d20.0_m0.009
+##  Nodelist : node2333
+##      CPUs : 1
+##  Mem/Node : 8192 MB
+## Directory : /oscar/data/dharri15/eaguerov/examples/openfoam/openfoam-TPP
+##   Job Started : Wed Jan 21 02:55:04 PM EST 2026
+###############################################################################
+------------------------------------------------------------
+Action: video | Case: case_H0.208_D0.2_flat_R0.004_f1.88_d20.0_m0.009
+Date: $(date)
+
+❌ Error: Dependency 'numpy' failed to load.
+   Executable: /usr/bin/python3
+   Venv Path:  /oscar/data/dharri15/eaguerov/examples/openfoam/openfoam-TPP/sloshing
+
+   ⚠️  VENV MISMATCH DETECTED!
+   The 'sloshing' folder was likely created with a different Python version.
+   Current active python is: 3.9.21
+
+   ACTION REQUIRED: Please delete the broken virtual environment and restart:
+   rm -rf /oscar/data/dharri15/eaguerov/examples/openfoam/openfoam-TPP/sloshing
+## SLURM PROLOG ###############################################################
+##    Job ID : 122299
+##  Job Name : post_flow_case_H0.208_D0.2_flat_R0.004_f1.88_d20.0_m0.009
+##  Nodelist : node2335
+##      CPUs : 1
+##  Mem/Node : 8192 MB
+## Directory : /oscar/data/dharri15/eaguerov/examples/openfoam/openfoam-TPP
+##   Job Started : Wed Jan 21 03:20:13 PM EST 2026
+###############################################################################
+------------------------------------------------------------
+Action: flow | Case: case_H0.208_D0.2_flat_R0.004_f1.88_d20.0_m0.009
+Date: $(date)
+
+❌ Error: Dependency 'numpy' failed to load.
+   Executable: /usr/bin/python3
+   Venv Path:  /oscar/data/dharri15/eaguerov/examples/openfoam/openfoam-TPP/sloshing
+
+   ⚠️  VENV MISMATCH DETECTED!
+   The 'sloshing' folder was likely created with a different Python version.
+   Current active python is: 3.9.21
+
+   ACTION REQUIRED: Please delete the broken virtual environment and restart:
+   rm -rf /oscar/data/dharri15/eaguerov/examples/openfoam/openfoam-TPP/sloshing
+## SLURM PROLOG ###############################################################
+##    Job ID : 122339
+##  Job Name : post_flow_case_H0.208_D0.2_flat_R0.004_f1.88_d20.0_m0.009
+##  Nodelist : node2337
+##      CPUs : 1
+##  Mem/Node : 8192 MB
+## Directory : /oscar/data/dharri15/eaguerov/examples/openfoam/openfoam-TPP
+##   Job Started : Wed Jan 21 03:27:35 PM EST 2026
+###############################################################################
+------------------------------------------------------------
+Action: flow | Case: case_H0.208_D0.2_flat_R0.004_f1.88_d20.0_m0.009
+Date: $(date)
+
+❌ Error: Dependency 'numpy' failed to load.
+   Executable: /usr/bin/python3
+   Venv Path:  /oscar/data/dharri15/eaguerov/examples/openfoam/openfoam-TPP/sloshing
+
+   ⚠️  VENV MISMATCH DETECTED!
+   The 'sloshing' folder was likely created with a different Python version.
+   Current active python is: 3.9.21
+
+   ACTION REQUIRED: Please delete the broken virtual environment and restart:
+   rm -rf /oscar/data/dharri15/eaguerov/examples/openfoam/openfoam-TPP/sloshing
+## SLURM PROLOG ###############################################################
+##    Job ID : 122340
+##  Job Name : post_video_case_H0.208_D0.2_flat_R0.004_f1.88_d20.0_m0.009
+##  Nodelist : node2337
+##      CPUs : 1
+##  Mem/Node : 8192 MB
+## Directory : /oscar/data/dharri15/eaguerov/examples/openfoam/openfoam-TPP
+##   Job Started : Wed Jan 21 03:27:43 PM EST 2026
+###############################################################################
+------------------------------------------------------------
+Action: video | Case: case_H0.208_D0.2_flat_R0.004_f1.88_d20.0_m0.009
+Date: $(date)
+
+❌ Error: Dependency 'numpy' failed to load.
+   Executable: /usr/bin/python3
+   Venv Path:  /oscar/data/dharri15/eaguerov/examples/openfoam/openfoam-TPP/sloshing
+
+   ⚠️  VENV MISMATCH DETECTED!
+   The 'sloshing' folder was likely created with a different Python version.
+   Current active python is: 3.9.21
+
+   ACTION REQUIRED: Please delete the broken virtual environment and restart:
+   rm -rf /oscar/data/dharri15/eaguerov/examples/openfoam/openfoam-TPP/sloshing

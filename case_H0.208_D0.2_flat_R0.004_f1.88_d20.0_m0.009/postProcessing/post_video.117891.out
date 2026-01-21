@@ -1,0 +1,54 @@
+## SLURM PROLOG ###############################################################
+##    Job ID : 117891
+##  Job Name : post_video_case_H0.208_D0.2_flat_R0.004_f1.88_d20.0_m0.009
+##  Nodelist : node2334
+##      CPUs : 1
+##  Mem/Node : 8192 MB
+## Directory : /oscar/data/dharri15/eaguerov/examples/openfoam/openfoam-TPP
+##   Job Started : Wed Jan 21 08:29:19 AM EST 2026
+###############################################################################
+Post-processing: video on case_H0.208_D0.2_flat_R0.004_f1.88_d20.0_m0.009
+  🎬 Generating video for case_H0.208_D0.2_flat_R0.004_f1.88_d20.0_m0.009 using PyVista...
+  Found 401 timesteps.
+    Renderer frame 10/401
+    Renderer frame 20/401
+    Renderer frame 30/401
+    Renderer frame 40/401
+    Renderer frame 50/401
+    Renderer frame 60/401
+    Renderer frame 70/401
+    Renderer frame 80/401
+    Renderer frame 90/401
+    Renderer frame 100/401
+    Renderer frame 110/401
+    Renderer frame 120/401
+    Renderer frame 130/401
+    Renderer frame 140/401
+    Renderer frame 150/401
+    Renderer frame 160/401
+    Renderer frame 170/401
+    Renderer frame 180/401
+    Renderer frame 190/401
+    Renderer frame 200/401
+    Renderer frame 210/401
+    Renderer frame 220/401
+    Renderer frame 230/401
+    Renderer frame 240/401
+    Renderer frame 250/401
+    Renderer frame 260/401
+    Renderer frame 270/401
+    Renderer frame 280/401
+    Renderer frame 290/401
+    Renderer frame 300/401
+    Renderer frame 310/401
+    Renderer frame 320/401
+    Renderer frame 330/401
+    Renderer frame 340/401
+    Renderer frame 350/401
+    Renderer frame 360/401
+    Renderer frame 370/401
+    Renderer frame 380/401
+    Renderer frame 390/401
+    Renderer frame 400/401
+  ✅ Video saved: case_H0.208_D0.2_flat_R0.004_f1.88_d20.0_m0.009/animation.mp4
+End: $(date)

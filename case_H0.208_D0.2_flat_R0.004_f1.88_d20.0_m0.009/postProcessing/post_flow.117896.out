@@ -1,0 +1,33 @@
+## SLURM PROLOG ###############################################################
+##    Job ID : 117896
+##  Job Name : post_flow_case_H0.208_D0.2_flat_R0.004_f1.88_d20.0_m0.009
+##  Nodelist : node2333
+##      CPUs : 1
+##  Mem/Node : 8192 MB
+## Directory : /oscar/data/dharri15/eaguerov/examples/openfoam/openfoam-TPP
+##   Job Started : Wed Jan 21 08:30:16 AM EST 2026
+###############################################################################
+Post-processing: flow on case_H0.208_D0.2_flat_R0.004_f1.88_d20.0_m0.009
+  📐 Generating potential flow prediction for case_H0.208_D0.2_flat_R0.004_f1.88_d20.0_m0.009...
+
+============================================================
+  Potential Flow Theory Prediction
+============================================================
+  Cylinder Radius (R):       0.1000 m
+  Orbital Radius (a):        0.0040 m
+  Forcing Frequency (f):     1.8800 Hz
+  Angular Frequency (ω):     11.8124 rad/s
+  Liquid Depth (d):          0.1040 m
+  Froude Number (F):         0.056894
+------------------------------------------------------------
+  Wall Amplitude (A_PT):     3.146940e-02 m
+  Crest-to-Trough (Δh_PT):   6.293879e-02 m
+------------------------------------------------------------
+  Modes Used:                30
+  Output File:               case_H0.208_D0.2_flat_R0.004_f1.88_d20.0_m0.009/postProcessing/potential_flow/potential_flow_wall.csv
+============================================================
+
+  ✅ Potential flow data saved: case_H0.208_D0.2_flat_R0.004_f1.88_d20.0_m0.009/postProcessing/potential_flow/potential_flow_wall.csv
+  🎬 Generating potential flow animation...
+Error saving video: [Errno 2] No such file or directory: '/oscar/data/dharri15/eaguerov/examples/openfoam/openfoam-TPP/case_H0.208_D0.2_flat_R0.004_f1.88_d20.0_m0.009/postProcessing/potential_flow/postProcessing'
+End: $(date)

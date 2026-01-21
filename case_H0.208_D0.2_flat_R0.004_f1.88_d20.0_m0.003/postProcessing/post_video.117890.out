@@ -1,0 +1,14 @@
+## SLURM PROLOG ###############################################################
+##    Job ID : 117890
+##  Job Name : post_video_case_H0.208_D0.2_flat_R0.004_f1.88_d20.0_m0.003
+##  Nodelist : node2334
+##      CPUs : 1
+##  Mem/Node : 8192 MB
+## Directory : /oscar/data/dharri15/eaguerov/examples/openfoam/openfoam-TPP
+##   Job Started : Wed Jan 21 08:29:19 AM EST 2026
+###############################################################################
+Post-processing: video on case_H0.208_D0.2_flat_R0.004_f1.88_d20.0_m0.003
+  🎬 Generating video for case_H0.208_D0.2_flat_R0.004_f1.88_d20.0_m0.003 using PyVista...
+  Found 1 timesteps.
+  ✅ Video saved: case_H0.208_D0.2_flat_R0.004_f1.88_d20.0_m0.003/animation.mp4
+End: $(date)
