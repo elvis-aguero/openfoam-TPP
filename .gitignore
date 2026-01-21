@@ -2,7 +2,7 @@
 .DS_Store
 .agent/
 __pycache__/
-*.log
+# *.log
 
 # Python virtual environment
 sloshing/
@@ -29,9 +29,9 @@ case_*/?*
 **/*.foam
 **/*.msh
 **/*.geo.bak
-**/*.out
-**/*.err
-case_**/*.log
+# **/*.out
+# **/*.err
+# case_**/*.log
 postprocess_*.slurm
 
 # Media management: Force un-ignore video files anywhere
