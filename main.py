@@ -8,13 +8,15 @@ import argparse
 # --- Dependency Management ---
 def ensure_dependencies():
     """Check and install required Python packages."""
-    # Check if we have already tried to restart in this process tree
+    # Check if we are running in our specific virtual environment
+    venv_path = os.path.join(os.path.dirname(os.path.abspath(__file__)), "sloshing")
+    # Check if sys.prefix (where python thinks it's running from) matches our venv
+    # or if we are in a 'sloshing' env generally
+    in_venv = (os.path.samefile(sys.prefix, venv_path) if os.path.exists(venv_path) else False) or "sloshing" in sys.executable
+    
+    # Override if we set the restart flag
     if os.environ.get("SLOSHING_ENV_RESTARTED") == "1":
         in_venv = True
-    else:
-        # Fallback check
-        venv_path = os.path.join(os.path.dirname(__file__), "sloshing")
-        in_venv = venv_path in sys.executable
     
     try:
         import numpy
