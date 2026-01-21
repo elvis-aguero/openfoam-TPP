@@ -656,13 +656,13 @@ def generate_video(case_dir):
 
     # 1. Generate 3D Moving Mesh Video
     print("    - Generating 3D perspective video...")
-    video_path_3d = os.path.join(results_dir, "animation_3d.mp4")
-    
-    # Setup Plotter (Off-screen)
-    plotter = pv.Plotter(off_screen=True, window_size=[1280, 720])
-    # Camera: (Position), (Focal Point), (View Up)
     # Moving camera back (-0.6 in Y) and up (0.4 in Z) to see full tank (D~0.2, H~0.2)
     plotter.camera_position = [(0.0, -0.6, 0.4), (0.0, 0.0, 0.05), (0.0, 0.0, 1.0)]
+    
+    # Use a distinct name to avoid confusion with old runs
+    video_filename = "video_3d_render.mp4"
+    video_path_3d = os.path.join(results_dir, video_filename)
+    print(f"    - Target video path: {os.path.abspath(video_path_3d)}")
     
     try:
         with imageio.get_writer(video_path_3d, fps=30, macro_block_size=None) as writer:
@@ -693,7 +693,7 @@ def generate_video(case_dir):
                     
                 if (i+1) % 20 == 0:
                      print(f"      Rendered 3D frame {i+1}/{len(time_values)}")
-        print(f"      ✅ Saved: animation_3d.mp4")
+        print(f"      ✅ Saved: {video_filename}")
     except Exception as e:
         print(f"      ❌ Error saving 3D video: {e}")
 

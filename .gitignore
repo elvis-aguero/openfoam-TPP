@@ -24,8 +24,7 @@ case_*/?*
 # Ensure heavy data is ALWAYS ignored even if inside allowed folders
 **/constant/polyMesh/
 **/processor*/
-**/[0-9]*
-![0]/
+**/\d+/
 **/*.foam
 **/*.msh
 **/*.geo.bak
@@ -34,6 +33,7 @@ case_*/?*
 case_**/*.log
 postprocess_*.slurm
 
-# Media management: Allow these specifically in result folders
-# Already handled by un-ignoring postProcessing/** above
-
+# Media management: Force un-ignore video files anywhere
+!*.mp4
+!*.avi
+!*.gif
