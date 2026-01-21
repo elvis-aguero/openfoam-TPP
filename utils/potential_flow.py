@@ -156,7 +156,10 @@ def generate_wall_elevation_csv(case_dir, R, a, freq, d,
     import os
     
     if output_file is None:
-        output_file = os.path.join(case_dir, "potential_flow_wall.csv")
+        # Default to generic name in current dir if not specified
+        output_file = "potential_flow_wall.csv"
+        if os.path.isdir(case_dir): 
+             output_file = os.path.join(case_dir, output_file)
     
     # Convert frequency to rad/s
     omega = 2 * np.pi * freq
@@ -219,19 +222,20 @@ def print_summary(summary):
     print("="*60 + "\n")
 
 
-def generate_video_from_csv(csv_file, case_dir, R, duration=10.0, fps=30):
+def generate_video_from_csv(csv_file, output_dir, R, duration=10.0, fps=30):
     """
     Wrapper to generate both 3D and Dashboard videos from potential flow CSV.
+    Saves videos directly to output_dir.
     """
-    print("    - Generating 3D moving mesh animation...")
-    generate_3d_animation(csv_file, case_dir, R, duration, fps)
+    print(f"    - Generating 3D moving mesh animation in {output_dir}...")
+    generate_3d_animation(csv_file, output_dir, R, duration, fps)
     
-    print("    - Generating analysis dashboard animation...")
-    generate_dashboard_animation(csv_file, case_dir, R, duration, fps)
+    print(f"    - Generating analysis dashboard animation in {output_dir}...")
+    generate_dashboard_animation(csv_file, output_dir, R, duration, fps)
     
-    return os.path.join(case_dir, "postProcessing", "potential_flow") # Return dir
+    return output_dir
 
-def generate_3d_animation(csv_file, case_dir, R, duration, fps):
+def generate_3d_animation(csv_file, output_dir, R, duration, fps):
     import os
     import numpy as np
     import csv
@@ -246,14 +250,21 @@ def generate_3d_animation(csv_file, case_dir, R, duration, fps):
         return None
 
     # Parse parameters (a, omega)
+    a = 0.005; omega = 1.0 # Defaults
+    
+    # Try to parse from filename
     import re
-    match = re.match(r'case_H([\d.]+)_D([\d.]+)_(\w+)_R([\d.]+)_f([\d.]+)', os.path.basename(case_dir))
+    match = re.search(r'_H([\d.]+)_D([\d.]+)_(\w+)_R([\d.]+)_f([\d.]+)', csv_file)
     if match:
-        a = float(match.group(4))
+        a = float(match.group(4)) 
         f_hz = float(match.group(5))
         omega = 2 * np.pi * f_hz
-    else:
-        a = 0.005; omega = 1.0
+    elif os.path.basename(output_dir).startswith("case_"):
+         match = re.search(r'R([\d.]+)_f([\d.]+)', os.path.basename(output_dir))
+         if match:
+            a = float(match.group(1))
+            f_hz = float(match.group(2))
+            omega = 2 * np.pi * f_hz
 
     # Load Data
     times, thetas, zetas = [], [], []
@@ -266,64 +277,79 @@ def generate_3d_animation(csv_file, case_dir, R, duration, fps):
     
     unique_times = np.unique(times)
     unique_thetas = np.unique(thetas)
-    zeta_grid = np.array(zetas).reshape(len(unique_times), len(unique_thetas))
+    # Reshape: (n_times, n_thetas)
+    n_t, n_th = len(unique_times), len(unique_thetas)
+    if len(zetas) == n_t * n_th:
+       zeta_wall_grid = np.array(zetas).reshape(n_t, n_th)
+    else:
+       print("Warning: Grid mismatch in CSV. Reshaping might fail.")
+       zeta_wall_grid = np.zeros((n_t, n_th))
+
+    # Debug: Check Amplitude
+    max_amp = np.max(np.abs(zeta_wall_grid))
+    print(f"      3D Animation Debug: Max Wall Amplitude = {max_amp:.6e} m")
 
     # Setup 3D Figure
     fig = plt.figure(figsize=(10, 8))
     ax = fig.add_subplot(111, projection='3d')
-    plt.subplots_adjust(left=0, right=1, bottom=0, top=1) # Full frame
+    plt.subplots_adjust(left=0, right=1, bottom=0, top=1) 
 
-    # Pre-calc Setup
-    theta_cyl = np.linspace(0, 2*np.pi, 50)
-    z_cyl = np.linspace(-R, R, 2)
-    THETA, Z_wall = np.meshgrid(theta_cyl, z_cyl)
+    # Pre-calc Coordinate Systems
+    # 1. Cylinder Coordinates
+    theta_cyl = np.linspace(0, 2*np.pi, 60)
+    z_cyl = np.linspace(-R, R/2, 2)
+    THETA, Z_wall_cyl = np.meshgrid(theta_cyl, z_cyl)
     X_unit, Y_unit = np.cos(THETA), np.sin(THETA)
     
-    # Surface Grid
-    r_surf = np.linspace(0, R, 15)
-    R_surf, TH_surf = np.meshgrid(r_surf, unique_thetas)
-    X_surf_rel = R_surf * np.cos(TH_surf)
-    Y_surf_rel = R_surf * np.sin(TH_surf)
+    # 2. Surface Grid (Polar)
+    r_surf = np.linspace(0, R, 20)
+    # Use CSV thetas for compatibility
+    R_grid, Th_grid = np.meshgrid(r_surf, unique_thetas) # (n_th, n_r)
+    X_surf_rel = R_grid * np.cos(Th_grid)
+    Y_surf_rel = R_grid * np.sin(Th_grid)
+    
+    # Bessel Function First Mode shape for radial dependence J1(eps*r/R)
+    # First root of J1' is approx 1.8412
+    # We import jn from scipy.special at top level
+    eps1 = 1.8412
+    J1_r = jn(1, eps1 * r_surf / R)
+    J1_R = jn(1, eps1) # normalization at wall
+    Radial_Profile = J1_r / J1_R  # Shape (n_r,) normalized to 1 at r=R
 
     def update(frame):
         ax.clear()
         t_idx = int(frame * len(unique_times) / (fps * duration))
-        if t_idx >= len(unique_times): t_idx = len(unique_times) - 1
+        if t_idx >= n_t: t_idx = n_t - 1
         
         t = unique_times[t_idx]
+        # Tank Motion
         xc, yc = a * np.cos(omega * t), a * np.sin(omega * t)
         
-        # Plot Cylinder
-        ax.plot_surface(R*X_unit + xc, R*Y_unit + yc, Z_wall, color='k', alpha=0.1)
-        
-        # Plot Surface (Linear radial approximation from wall)
-        # Z(r, theta) = zeta(theta) * (r/R)
-        zeta_t = zeta_grid[t_idx, :]
-        # Ensure dimensionality matches: zeta_t is (n_theta,), r_surf is (n_r,), R_surf is (n_theta, n_r)
-        
-        # We need an outer product kind of broadcast.
-        # zeta_grid is (n_time, n_theta). zeta_t is (n_theta,)
-        # R_surf has shape (n_theta, n_r) via meshgrid(r, theta) -> NO, meshgrid depends on input order
-        # r_surf = np.linspace(0, R, 15) -> (15,)
-        # unique_thetas -> (n_theta,)
-        # R_surf, TH_surf = np.meshgrid(r_surf, unique_thetas) -> R_surf is (n_theta, 15)
-        
-        # zeta_t is (n_theta,). We want (n_theta, 15).
-        # We can just broadcast multiply: zeta_t[:, None] * (r_surf / R)[None, :]
-        
-        Z_surf = zeta_t[:, np.newaxis] * (r_surf / R)[np.newaxis, :]
-        
-        ax.plot_surface(X_surf_rel + xc, Y_surf_rel + yc, Z_surf, cmap='coolwarm', alpha=0.9, linewidth=0, antialiased=False)
-        
-        ax.set_box_aspect([1,1,1])
-        ax.set_xlim([-R-a, R+a]); ax.set_ylim([-R-a, R+a]); ax.set_zlim([-R, R])
-        ax.set_title(f"Potential Flow 3D\nt={t:.2f}s")
-        ax.axis('off') # Cleaner look
+        # Plot Tank Wireframe
+        ax.plot_surface(R*X_unit + xc, R*Y_unit + yc, Z_wall_cyl, color='k', alpha=0.05)
+        ax.plot_wireframe(R*X_unit + xc, R*Y_unit + yc, Z_wall_cyl, color='k', alpha=0.1, rstride=1, cstride=10)
 
-    # Save
-    run_animation_save(fig, update, duration, fps, case_dir, "potential_flow_3d.mp4")
+        # Plot Free Surface
+        # Wall Elevation at this time: zeta_wall(theta) -> (n_th,)
+        zw_t = zeta_wall_grid[t_idx, :]
+        
+        # Reconstruct full surface Z(r, theta) using separation of variables approx:
+        # Z(r, theta) = zeta_wall(theta) * (J1(k*r)/J1(k*R))
+        # zw_t is (n_th,), Radial_Profile is (n_r,)
+        Z_surf = zw_t[:, np.newaxis] * Radial_Profile[np.newaxis, :]
+        
+        ax.plot_surface(X_surf_rel + xc, Y_surf_rel + yc, Z_surf, cmap='coolwarm', 
+                              alpha=0.9, rstride=1, cstride=1, linewidth=0, antialiased=False)
+        
+        view_r = R * 1.5
+        ax.set_box_aspect([1,1,0.5])
+        ax.set_xlim([-view_r, view_r]); ax.set_ylim([-view_r, view_r]); ax.set_zlim([-R/2, R/2])
+        ax.set_title(f"Potential Flow 3D (t={t:.2f}s)\nMax Z: {np.max(Z_surf):.4f}m", fontsize=10)
+        ax.axis('off')
 
-def generate_dashboard_animation(csv_file, case_dir, R, duration, fps):
+    run_animation_save(fig, update, duration, fps, output_dir, "potential_flow_3d.mp4")
+
+def generate_dashboard_animation(csv_file, output_dir, R, duration, fps):
     import os
     import numpy as np
     import csv
@@ -373,9 +399,9 @@ def generate_dashboard_animation(csv_file, case_dir, R, duration, fps):
         ax2.set_xlabel('Time (s)'); ax2.set_title('Wave Probes')
         ax2.grid(True)
         
-    run_animation_save(fig, update, duration, fps, case_dir, "potential_flow_dashboard.mp4")
+    run_animation_save(fig, update, duration, fps, output_dir, "potential_flow_dashboard.mp4")
 
-def run_animation_save(fig, update_func, duration, fps, case_dir, filename):
+def run_animation_save(fig, update_func, duration, fps, output_dir, filename):
     import matplotlib.pyplot as plt
     from matplotlib.animation import FuncAnimation, FFMpegWriter
     import os
@@ -383,10 +409,9 @@ def run_animation_save(fig, update_func, duration, fps, case_dir, filename):
     n_frames = int(fps * duration)
     anim = FuncAnimation(fig, update_func, frames=n_frames, interval=1000/fps)
     
-    # Save path
-    out_dir = os.path.join(case_dir, "postProcessing", "potential_flow")
-    os.makedirs(out_dir, exist_ok=True)
-    out_path = os.path.join(out_dir, filename)
+    # Save directly to output_dir
+    os.makedirs(output_dir, exist_ok=True)
+    out_path = os.path.join(output_dir, filename)
     
     # FFMPEG Setup
     try:

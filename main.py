@@ -174,11 +174,10 @@ def estimate_resources(params):
     n_cells = vol / cell_vol
     
     # Calibrated performance model
-    # User's 240k cell, 20s run took > 24h. 
-    # Let's assume it needed ~36h total (1.5 days).
-    # 36 hours / (0.24M cells * 20s) = ~7.5 cpu-hours per (Mcell-sec)
-    # We'll use 30.0 as a safe conservative factor based on recent observations.
-    total_cpu_hours = (n_cells / 1e6) * duration * 30.0
+    # User's recent runs suggest high CPU usage per cell.
+    # Increasing safety factor significantly to prevent timeouts.
+    # Factor: 80.0 cpu-hours per (Mcell-sec)
+    total_cpu_hours = (n_cells / 1e6) * duration * 80.0
     
     # Suggest CPUs (aim for ~4-8 hours wall-clock time)
     suggested_cpus = math.ceil(total_cpu_hours / 6.0)
@@ -198,6 +197,27 @@ def estimate_resources(params):
         suggested_cpus = 2**math.floor(math.log2(suggested_cpus))
 
     wall_clock_hours = total_cpu_hours / suggested_cpus
+    
+    # Add 50% buffer + 1 hour flat
+    safe_hours = wall_clock_hours * 1.5 + 1.0
+    
+    # Enforce realistic minimums for Oscar
+    # If case is obviously tiny, 1h is fine. If larger, force 4h+.
+    if n_cells > 100000:
+        safe_hours = max(safe_hours, 6.0)
+    else:
+        safe_hours = max(safe_hours, 1.0)
+        
+    # Cap at 24h to avoid long queue times (unless absolutely needed)
+    safe_hours = min(safe_hours, 24.0)
+    
+    time_limit = format_time(safe_hours)
+    
+    # Memory: 200MB per 100k cells + base
+    mem_gb = (n_cells / 100000) * 0.2 + 2.0
+    mem_gb = max(4.0, math.ceil(mem_gb))
+    
+    return f"{int(mem_gb)}G", time_limit, n_cells, suggested_cpus
     # Add 100% buffer (2x) to account for variability & I/O
     wall_clock_hours *= 2.0
     
@@ -910,7 +930,7 @@ def menu_postprocess(is_oscar):
         if not indices:
             print("No valid indices selected.")
             return
-        
+
         print(f"\nGenerating potential flow predictions for {len(indices)} case(s)...")
         for i in indices:
             if is_oscar:
@@ -921,6 +941,43 @@ def menu_postprocess(is_oscar):
                             run_postprocess_oscar(cases[idx], "flow")
                         return
             generate_potential_flow(cases[i])
+
+    elif choice == '4':
+        print("\n→ Reconstruct Parallel Case (Merge Processor Directories)")
+        idx_str = input("  Enter case numbers (e.g., 1, 3-5, all): ").strip().lower()
+        if idx_str == 'all':
+            indices = list(range(len(cases)))
+        else:
+            indices = parse_indices(idx_str, len(cases))
+        
+        if not indices:
+            print("No valid indices selected.")
+            return
+
+        for i in indices:
+            case = cases[i]
+            print(f"\n  🔨 Reconstructing {case}...")
+            # Check if processor dirs exist
+            if not os.path.exists(os.path.join(case, "processor0")):
+                print(f"     ⚠️ No processor0 directory found. Is this a parallel run?")
+                continue
+            
+            if is_oscar:
+                submit = input(f"     Submit reconstruction for {case} as Slurm job? (y/n/all): ").strip().lower()
+                if submit == 'y' or submit == 'all':
+                    run_postprocess_oscar(case, "reconstruct")
+                    if submit == 'all':
+                        # Silently submit the rest
+                        for future_idx in indices[indices.index(i)+1:]:
+                             run_postprocess_oscar(cases[future_idx], "reconstruct")
+                        return
+                elif submit == 'n':
+                   subprocess.run(["reconstructPar"], cwd=case, check=False)
+            else:
+                 subprocess.run(["reconstructPar"], cwd=case, check=False)
+
+    elif choice == '5':
+        return
 
 def run_postprocess_oscar(case_name, action):
     """Submits a post-processing job to Slurm."""
