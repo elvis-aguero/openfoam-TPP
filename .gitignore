@@ -29,6 +29,10 @@ case_*/?*
 **/*.foam
 **/*.msh
 **/*.geo.bak
+**/*.out
+**/*.err
+case_**/*.log
+postprocess_*.slurm
 
 # Media management: Allow these specifically in result folders
 # Already handled by un-ignoring postProcessing/** above

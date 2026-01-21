@@ -913,14 +913,18 @@ def run_postprocess_oscar(case_name, action):
         "#SBATCH -n 1",
         "#SBATCH --time=01:00:00",
         "#SBATCH --mem=8G",
-        f"#SBATCH -o {case_name}/postProcessing/post_{action}.%j.out",
-        f"#SBATCH -e {case_name}/postProcessing/post_{action}.%j.err",
+        f"#SBATCH -o {case_name}/postProcessing/slurm_postprocessing.log",
+        "#SBATCH --open-mode=append",
         "",
         "set -euo pipefail",
         "",
-        f"echo 'Post-processing: {action} on {case_name}'",
+        "echo '------------------------------------------------------------'",
+        f"echo 'Action: {action} | Case: {case_name}'",
+        f"echo 'Date: $(date)'",
         f"python3 main.py --headless --case {case_name} --action {action}",
-        "echo 'End: $(date)'"
+        "echo 'End: $(date)'",
+        "echo '------------------------------------------------------------'",
+        ""
     ]
     
     os.makedirs(os.path.join(case_name, "postProcessing"), exist_ok=True)
