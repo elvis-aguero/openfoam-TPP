@@ -605,3 +605,49 @@ Date: $(date)
 
    ACTION REQUIRED: Please delete the broken virtual environment and restart:
    rm -rf /oscar/data/dharri15/eaguerov/examples/openfoam/openfoam-TPP/sloshing
+## SLURM PROLOG ###############################################################
+##    Job ID : 122379
+##  Job Name : post_flow_case_H0.208_D0.2_flat_R0.004_f1.88_d20.0_m0.009
+##  Nodelist : node2337
+##      CPUs : 1
+##  Mem/Node : 8192 MB
+## Directory : /oscar/data/dharri15/eaguerov/examples/openfoam/openfoam-TPP
+##   Job Started : Wed Jan 21 03:40:27 PM EST 2026
+###############################################################################
+------------------------------------------------------------
+Action: flow | Case: case_H0.208_D0.2_flat_R0.004_f1.88_d20.0_m0.009
+Date: $(date)
+
+❌ Error: Dependency 'numpy' failed to load.
+   Executable: /usr/bin/python3
+   Venv Path:  /oscar/data/dharri15/eaguerov/examples/openfoam/openfoam-TPP/sloshing
+
+   ⚠️  VENV MISMATCH DETECTED!
+   The 'sloshing' folder was likely created with a different Python version.
+   Current active python is: 3.9.21
+
+   ACTION REQUIRED: Please delete the broken virtual environment and restart:
+   rm -rf /oscar/data/dharri15/eaguerov/examples/openfoam/openfoam-TPP/sloshing
+## SLURM PROLOG ###############################################################
+##    Job ID : 122380
+##  Job Name : post_video_case_H0.208_D0.2_flat_R0.004_f1.88_d20.0_m0.009
+##  Nodelist : node2337
+##      CPUs : 1
+##  Mem/Node : 8192 MB
+## Directory : /oscar/data/dharri15/eaguerov/examples/openfoam/openfoam-TPP
+##   Job Started : Wed Jan 21 03:40:41 PM EST 2026
+###############################################################################
+------------------------------------------------------------
+Action: video | Case: case_H0.208_D0.2_flat_R0.004_f1.88_d20.0_m0.009
+Date: $(date)
+
+❌ Error: Dependency 'numpy' failed to load.
+   Executable: /usr/bin/python3
+   Venv Path:  /oscar/data/dharri15/eaguerov/examples/openfoam/openfoam-TPP/sloshing
+
+   ⚠️  VENV MISMATCH DETECTED!
+   The 'sloshing' folder was likely created with a different Python version.
+   Current active python is: 3.9.21
+
+   ACTION REQUIRED: Please delete the broken virtual environment and restart:
+   rm -rf /oscar/data/dharri15/eaguerov/examples/openfoam/openfoam-TPP/sloshing
