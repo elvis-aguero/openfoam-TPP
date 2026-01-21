@@ -567,11 +567,15 @@ def generate_video(case_dir):
     import imageio
     import numpy as np
     
-    # Try to launch XVFB for headless rendering if available
+    # Force off-screen rendering for cluster environment
+    pv.OFF_SCREEN = True
+    
+    # Try to launch XVFB for headless rendering if available, but don't fail if not
+    # This helps if X is technically present but no display is attached
     try:
         pv.start_xvfb()
     except OSError:
-        pass # Might fail if not on Linux or xvfb not installed, but pyvista might still work with osmesa
+        pass
 
     print(f"  🎬 Generating video for {case_dir} using PyVista...")
     
