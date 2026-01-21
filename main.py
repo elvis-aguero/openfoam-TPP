@@ -630,7 +630,7 @@ def generate_video(case_dir):
                         except: pass
                     
                     # 2. Plot Tank Container
-                    plotter.add_mesh(internal_mesh.extract_feature_edges(), color='black', style='wireframe', opacity=0.1)
+                    plotter.add_mesh(internal_mesh.outline(), color='black', opacity=0.3)
                     # 3. Floor
                     plotter.add_floor(face='z', i_resolution=10, j_resolution=10, color='gray', pad=1.0)
                     plotter.add_text(f"OpenFOAM 3D\nTime: {t:.2f} s", position='upper_left', font_size=10, color='black')

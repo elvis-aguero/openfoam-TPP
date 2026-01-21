@@ -292,13 +292,29 @@ def generate_3d_animation(csv_file, case_dir, R, duration, fps):
         t = unique_times[t_idx]
         xc, yc = a * np.cos(omega * t), a * np.sin(omega * t)
         
+        # 2. Plot Tank Container (Clean Cylinder Wireframe)
+        # Instead of extracting all edges which can look messy, just plot the bouding box or a generic cylinder
+        # Or simpler: just outline
+        # plotter.add_mesh(internal_mesh.outline(), color='black', opacity=0.3) # This line is commented out as 'plotter' and 'internal_mesh' are not defined in this context.
+        
         # Plot Cylinder
         ax.plot_surface(R*X_unit + xc, R*Y_unit + yc, Z_wall, color='k', alpha=0.1)
         
-        # Plot Surface (Linear radial interp)
+        # Plot Surface (Linear radial approximation from wall)
         # Z(r, theta) = zeta(theta) * (r/R)
-        zeta_t = zeta_grid[t_idx, :]
-        Z_surf = np.outer(zeta_t, r_surf/R) # (n_theta, n_r)
+        # Ensure dimensionality matches: zeta_t is (n_theta,), r_surf is (n_r,), R_surf is (n_theta, n_r)
+        
+        # We need an outer product kind of broadcast.
+        # zeta_grid is (n_time, n_theta). zeta_t is (n_theta,)
+        # R_surf has shape (n_theta, n_r) via meshgrid(r, theta) -> NO, meshgrid depends on input order
+        # r_surf = np.linspace(0, R, 15) -> (15,)
+        # unique_thetas -> (n_theta,)
+        # R_surf, TH_surf = np.meshgrid(r_surf, unique_thetas) -> R_surf is (n_theta, 15)
+        
+        # zeta_t is (n_theta,). We want (n_theta, 15).
+        # We can just broadcast multiply: zeta_t[:, None] * (r_surf / R)[None, :]
+        
+        Z_surf = zeta_t[:, np.newaxis] * (r_surf / R)[np.newaxis, :]
         
         ax.plot_surface(X_surf_rel + xc, Y_surf_rel + yc, Z_surf, cmap='coolwarm', alpha=0.9, linewidth=0, antialiased=False)
         
