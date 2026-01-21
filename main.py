@@ -7,17 +7,26 @@ import argparse
 
 # --- Dependency Management ---
 def ensure_dependencies():
-    """Check and install required Python packages."""
-    # Check if we are running in our specific virtual environment
-    venv_path = os.path.join(os.path.dirname(os.path.abspath(__file__)), "sloshing")
-    # Check if sys.prefix (where python thinks it's running from) matches our venv
-    # or if we are in a 'sloshing' env generally
-    in_venv = (os.path.samefile(sys.prefix, venv_path) if os.path.exists(venv_path) else False) or "sloshing" in sys.executable
+    """Check and install required Python packages with robust venv detection."""
+    base_dir = os.path.dirname(os.path.abspath(__file__))
+    venv_path = os.path.join(base_dir, "sloshing")
+    restarted = os.environ.get("SLOSHING_ENV_RESTARTED") == "1"
+
+    # Robust detection of whether we are running in the 'sloshing' venv
+    in_venv = False
+    active_venv = os.environ.get("VIRTUAL_ENV")
+    if active_venv and os.path.exists(active_venv) and os.path.exists(venv_path):
+        try:
+            if os.path.samefile(active_venv, venv_path):
+                in_venv = True
+        except: pass
     
-    # Override if we set the restart flag
-    if os.environ.get("SLOSHING_ENV_RESTARTED") == "1":
-        in_venv = True
-    
+    if not in_venv:
+        try:
+            if os.path.exists(venv_path) and os.path.samefile(sys.prefix, venv_path):
+                in_venv = True
+        except: pass
+
     try:
         import numpy
         import scipy
@@ -26,40 +35,47 @@ def ensure_dependencies():
         import imageio
         import imageio_ffmpeg
         import h5py
+        return # Success
     except ImportError as e:
-        if in_venv:
-            print(f"\n⚠️  Dependency missing in virtual environment: {e}")
-            print("Attempting to repair environment by re-installing requirements...")
-            # Proceed to install logic below instead of exiting
-            venv_path = os.path.join(os.path.dirname(__file__), "sloshing") # Re-define for safety
-        else:
-            print(f"\n⚠️  Missing dependencies detected: {e}")
-            venv_path = os.path.join(os.path.dirname(__file__), "sloshing")
+        # If we are already in the venv (or just restarted) and it fails, DON'T restart again.
+        if in_venv or restarted:
+            print(f"\n❌ Error: Dependency '{e.name}' failed to load inside the virtual environment.")
+            print(f"   Executable: {sys.executable}")
+            print(f"   Prefix:     {sys.prefix}")
+            print(f"   Search Path: {sys.path[:3]}...")
+            print("\n   Detailed error: ", e)
+            print("\n   Try deleting the 'sloshing' directory and running again.")
+            sys.exit(1)
+
+        print(f"\n⚠️  Missing dependencies detected: {e}")
+        
+        if not os.path.exists(venv_path):
             print(f"Creating virtual environment: {venv_path}")
             subprocess.run([sys.executable, "-m", "venv", venv_path], check=True)
-        
-        # Get pip from venv
+            
+        # Get venv python/pip
         if sys.platform == "win32":
             pip_path = os.path.join(venv_path, "Scripts", "pip")
             python_path = os.path.join(venv_path, "Scripts", "python")
         else:
             pip_path = os.path.join(venv_path, "bin", "pip")
             python_path = os.path.join(venv_path, "bin", "python3")
-        
-        # Install requirements
-        req_file = os.path.join(os.path.dirname(__file__), "requirements.txt")
+            if not os.path.exists(python_path):
+                python_path = os.path.join(venv_path, "bin", "python")
+
+        # Install/Verify
+        print("Installing/Verifying requirements...")
+        req_file = os.path.join(base_dir, "requirements.txt")
+        subprocess.run([pip_path, "install", "--upgrade", "pip"], check=False)
         subprocess.run([pip_path, "install", "-r", req_file], check=True)
         
-        print("\n✅ Dependencies installed successfully!")
-        print(f"Restarting with virtual environment...\n")
+        print("\n✅ Dependencies verified.")
+        print(f"Restarting with virtual environment python...\n")
         
-        # Set environment variable to prevent loop
         os.environ["SLOSHING_ENV_RESTARTED"] = "1"
-        
-        # Restart script with venv python
         os.execv(python_path, [python_path] + sys.argv)
     except Exception as e:
-        print(f"\n❌ Error during dependency import: {e}")
+        print(f"\n❌ Unexpected error during dependency check: {e}")
         import traceback
         traceback.print_exc()
         sys.exit(1)
