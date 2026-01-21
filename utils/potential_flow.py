@@ -293,16 +293,12 @@ def generate_3d_animation(csv_file, case_dir, R, duration, fps):
         t = unique_times[t_idx]
         xc, yc = a * np.cos(omega * t), a * np.sin(omega * t)
         
-        # 2. Plot Tank Container (Clean Cylinder Wireframe)
-        # Instead of extracting all edges which can look messy, just plot the bouding box or a generic cylinder
-        # Or simpler: just outline
-        # plotter.add_mesh(internal_mesh.outline(), color='black', opacity=0.3) # This line is commented out as 'plotter' and 'internal_mesh' are not defined in this context.
-        
         # Plot Cylinder
         ax.plot_surface(R*X_unit + xc, R*Y_unit + yc, Z_wall, color='k', alpha=0.1)
         
         # Plot Surface (Linear radial approximation from wall)
         # Z(r, theta) = zeta(theta) * (r/R)
+        zeta_t = zeta_grid[t_idx, :]
         # Ensure dimensionality matches: zeta_t is (n_theta,), r_surf is (n_r,), R_surf is (n_theta, n_r)
         
         # We need an outer product kind of broadcast.
