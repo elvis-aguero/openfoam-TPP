@@ -9,15 +9,12 @@ FoamFile
 {
     format      ascii;
     class       dictionary;
-    location    "constant";
-    object      phaseProperties;
+    object      surfaceFeaturesDict;
 }
 // * * * * * * * * * * * * * * * * * * * * * * * * * * * * * * * * * * * * * //
 
-phases          (water air);
-
-// Constant water-air surface tension (N/m)
-sigma           0.072;
-
+surfaces ("cylinder.stl");
+includedAngle   150;
+writeFeatureEdgeMesh yes;
 
 // ************************************************************************* //

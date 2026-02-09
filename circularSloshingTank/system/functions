@@ -14,21 +14,35 @@ FoamFile
 }
 // * * * * * * * * * * * * * * * * * * * * * * * * * * * * * * * * * * * * * //
 
-probes
+probesU
 {
     type            probes;
     libs            ("libsampling.so");
-    writeControl   timeStep;
-    writeInterval  1;
-    probeLocations
-    (
-        (0 9.95 19.77)
-        (0 -9.95 19.77)
-    );
-    fixedLocations  false;
+    writeControl    timeStep;
+    writeInterval   5;
+    fixedLocations  true;
     fields
     (
-        p
+        U
+        alpha.water
+    );
+    probeLocations
+    (
+        (0 0 0.0025)
+        (0.0018675 0 0.0025)
+        (0 0.0018675 0.0025)
+        (-0.0018675 0 0.0025)
+        (0 -0.0018675 0.0025)
+        (0 0 0.005)
+        (0.0018675 0 0.005)
+        (0 0.0018675 0.005)
+        (-0.0018675 0 0.005)
+        (0 -0.0018675 0.005)
+        (0 0 0.0075)
+        (0.0018675 0 0.0075)
+        (0 0.0018675 0.0075)
+        (-0.0018675 0 0.0075)
+        (0 -0.0018675 0.0075)
     );
 }
 

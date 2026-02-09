@@ -8,16 +8,14 @@
 FoamFile
 {
     format      ascii;
-    class       dictionary;
+    class       uniformDimensionedVectorField;
     location    "constant";
-    object      phaseProperties;
+    object      g;
 }
 // * * * * * * * * * * * * * * * * * * * * * * * * * * * * * * * * * * * * * //
 
-phases          (water air);
-
-// Constant water-air surface tension (N/m)
-sigma           0.072;
+dimensions      [0 1 -2 0 0 0 0];
+value           (0 0 -9.81);
 
 
 // ************************************************************************* //

@@ -38,3 +38,10 @@ postprocess_*.slurm
 !*.mp4
 !*.avi
 !*.gif
+
+# Agent protocol entrypoints (symlinks)
+AGENTS.md
+GEMINI.md
+.claude/CLAUDE.md
+.github/copilot-instructions.md
+.gemini/styleguide.md

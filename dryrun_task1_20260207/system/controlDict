@@ -21,8 +21,7 @@ startFrom       latestTime;
 startTime       0;
 
 stopAt          endTime;
-
-endTime         10;
+endTime         0.0002;
 
 // Start with a conservative dt to avoid blowing up on the first step.
 // `maxDeltaT` still caps the growth (set via the manager's dt parameter).

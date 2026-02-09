@@ -9,15 +9,26 @@ FoamFile
 {
     format      ascii;
     class       dictionary;
-    location    "constant";
-    object      phaseProperties;
+    object      topoSetDict;
 }
 // * * * * * * * * * * * * * * * * * * * * * * * * * * * * * * * * * * * * * //
 
-phases          (water air);
-
-// Constant water-air surface tension (N/m)
-sigma           0.072;
-
+actions
+(
+    {
+        name    allCells;
+        type    cellSet;
+        action  new;
+        source  boxToCell;
+        box     (-0.02415 -0.02415 -0.02) (0.02415 0.02415 0.0283);
+    }
+    {
+        name    internalMesh;
+        type    cellZoneSet;
+        action  new;
+        source  setToCellZone;
+        set     allCells;
+    }
+);
 
 // ************************************************************************* //

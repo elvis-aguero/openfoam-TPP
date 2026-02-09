@@ -9,15 +9,28 @@ FoamFile
 {
     format      ascii;
     class       dictionary;
-    location    "constant";
-    object      phaseProperties;
+    location    "system";
+    object      decomposeParDict;
 }
 // * * * * * * * * * * * * * * * * * * * * * * * * * * * * * * * * * * * * * //
 
-phases          (water air);
+numberOfSubdomains 4; // Overwritten by main.py
 
-// Constant water-air surface tension (N/m)
-sigma           0.072;
+method          scotch;
+
+scotchCoeffs
+{
+    // n               (1 1 1);
+}
+
+manualCoeffs
+{
+    dataFile        "";
+}
+
+distributed     no;
+
+roots           ( );
 
 
 // ************************************************************************* //

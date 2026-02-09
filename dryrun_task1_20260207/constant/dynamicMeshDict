@@ -10,14 +10,38 @@ FoamFile
     format      ascii;
     class       dictionary;
     location    "constant";
-    object      phaseProperties;
+    object      dynamicMeshDict;
 }
 // * * * * * * * * * * * * * * * * * * * * * * * * * * * * * * * * * * * * * //
 
-phases          (water air);
+mover
+{
+    type            motionSolver;
 
-// Constant water-air surface tension (N/m)
-sigma           0.072;
+    libs            ("libfvMotionSolvers.so");
+
+    motionSolver    solidBody;
+
+    cellZone        internalMesh;
+
+    solidBodyMotionFunction sixDoFMotion;
+
+    CofG            (0 0 0);
+
+    translation
+    {
+        type            table;
+        file            "$FOAM_CASE/constant/6DoF.dat";
+        columns         (0 1);
+    }
+
+    rotation
+    {
+        type            table;
+        file            "$FOAM_CASE/constant/6DoF.dat";
+        columns         (0 2);
+    }
+}
 
 
 // ************************************************************************* //

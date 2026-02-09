@@ -9,15 +9,27 @@ FoamFile
 {
     format      ascii;
     class       dictionary;
-    location    "constant";
-    object      phaseProperties;
+    location    "system";
+    object      functions;
 }
 // * * * * * * * * * * * * * * * * * * * * * * * * * * * * * * * * * * * * * //
 
-phases          (water air);
-
-// Constant water-air surface tension (N/m)
-sigma           0.072;
-
+probes
+{
+    type            probes;
+    libs            ("libsampling.so");
+    writeControl   timeStep;
+    writeInterval  1;
+    probeLocations
+    (
+        (0 9.95 19.77)
+        (0 -9.95 19.77)
+    );
+    fixedLocations  false;
+    fields
+    (
+        p
+    );
+}
 
 // ************************************************************************* //

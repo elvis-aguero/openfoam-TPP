@@ -10,14 +10,11 @@ FoamFile
     format      ascii;
     class       dictionary;
     location    "constant";
-    object      phaseProperties;
+    object      momentumTransport;
 }
 // * * * * * * * * * * * * * * * * * * * * * * * * * * * * * * * * * * * * * //
 
-phases          (water air);
-
-// Constant water-air surface tension (N/m)
-sigma           0.072;
+simulationType  laminar;
 
 
 // ************************************************************************* //

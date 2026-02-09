@@ -8,16 +8,27 @@
 FoamFile
 {
     format      ascii;
-    class       dictionary;
-    location    "constant";
-    object      phaseProperties;
+    class       volScalarField;
+    object      p_rgh;
 }
 // * * * * * * * * * * * * * * * * * * * * * * * * * * * * * * * * * * * * * //
 
-phases          (water air);
+dimensions      [1 -1 -2 0 0 0 0];
 
-// Constant water-air surface tension (N/m)
-sigma           0.072;
+internalField   uniform 0;
 
+boundaryField
+{
+    walls
+    {
+        type            fixedFluxPressure;
+        value           uniform 0;
+    }
+    atmosphere
+    {
+        type            totalPressure;
+        p0              uniform 0;
+    }
+}
 
 // ************************************************************************* //

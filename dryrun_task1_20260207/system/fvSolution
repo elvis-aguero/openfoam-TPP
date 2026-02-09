@@ -18,8 +18,8 @@ solvers
 {
     alpha.water
     {
-        nCorrectors     2;
-        nSubCycles      2;
+        nCorrectors     1;
+        nSubCycles      3;
     }
 
     "pcorr.*"
@@ -82,11 +82,8 @@ PIMPLE
     nNonOrthogonalCorrectors 0;
     correctPhi      no;
 
-    // Must be inside the domain; `main.py` also patches this per-case based on H.
-    pRefPoint       (0 0 0.005);
-    // Use a reference consistent with the atmosphere BC (p0=0) to avoid
-    // imposing an artificial pressure offset.
-    pRefValue       0;
+    pRefPoint       (0 0 0.15);
+    pRefValue       1e5;
 }
 
 relaxationFactors

@@ -16,8 +16,7 @@ FoamFile
 
 phases          (water air);
 
-// Constant water-air surface tension (N/m)
-sigma           0.072;
+sigma           0;
 
 
 // ************************************************************************* //

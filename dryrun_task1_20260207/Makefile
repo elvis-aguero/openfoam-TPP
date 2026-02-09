@@ -7,7 +7,7 @@
 #
 # TARGETS:
 #   all       : Generate mesh, motion file, and setup case (default).
-#   mesh      : Generate geometry and mesh inputs (Gmsh or snappyHexMesh).
+#   mesh      : Generate geometry (.geo) and mesh (.msh) using Gmsh.
 #   motion    : Generate 6DoF motion file (constant/6DoF.dat).
 #   case      : Initialize field variables (runs update_setFields.py).
 #   run       : Run the OpenFOAM simulation (gmshToFoam -> setFields -> foamRun).
@@ -18,7 +18,6 @@
 #   H             : Tank height (default: 1.0)
 #   D             : Tank diameter (default: 0.5)
 #   MESH_SIZE     : Mesh characteristic length (default: 0.05)
-#   MESH_TOOL     : Mesher: 'gmsh' or 'snappy' (default: snappy)
 #   GEO_TYPE      : Geometry type: 'flat' or 'cap' (default: flat)
 #   MOTION_R      : Motion amplitude radius (default: 0.1)
 #   MOTION_FREQ   : Motion frequency in Hz (default: 0.5)
@@ -32,7 +31,6 @@
 H ?= 1.0
 D ?= 0.5
 MESH_SIZE ?= 0.05
-MESH_TOOL ?= snappy
 MOTION_R ?= 0.1
 MOTION_FREQ ?= 0.5
 DURATION ?= 10.0
@@ -51,10 +49,8 @@ help:
 
 # Prepare geometry and coordinate files (Run on Host/Login Node)
 prep: motion case
-	python3 generate_mesh.py $(H) $(D) $(MESH_SIZE) $(GEO_TYPE) $(MESH_TOOL)
-	@if [ "$(MESH_TOOL)" = "gmsh" ]; then \
-		gmsh -3 cylinder.geo -format msh2 -o cylinder.msh; \
-	fi
+	python3 generate_mesh.py $(H) $(D) $(MESH_SIZE) $(GEO_TYPE)
+	gmsh -3 cylinder.geo -format msh2 -o cylinder.msh
 
 # Generate Motion
 motion:
@@ -65,20 +61,6 @@ case:
 	# Update setFieldsDict for half-fill height (H/2)
 	python3 update_setFields.py $(H)
 
-# Generate Mesh (OpenFOAM utilities)
-mesh:
-	@if [ -f constant/polyMesh/points ]; then \
-		echo "Mesh already exists; skipping mesh generation."; \
-	elif [ "$(MESH_TOOL)" = "snappy" ]; then \
-		$(OF_PREFIX) blockMesh; \
-		$(OF_PREFIX) surfaceFeatures; \
-		$(OF_PREFIX) snappyHexMesh -overwrite; \
-		$(OF_PREFIX) topoSet; \
-		$(OF_PREFIX) createPatch -overwrite; \
-	else \
-		$(OF_PREFIX) gmshToFoam cylinder.msh; \
-	fi
-
 # Run Simulation
 ifeq ($(OSCAR),1)
     OF_PREFIX := of13 
@@ -86,57 +68,38 @@ endif
 
 OF_PREFIX ?= 
 N_CPUS ?= 1
-ADAPTIVE_STOP ?= 1
-run: mesh
+run:
 	# commands to be run in OpenFOAM environment
+	$(OF_PREFIX) gmshToFoam cylinder.msh
 	$(OF_PREFIX) setFields
 	@if [ $(N_CPUS) -gt 1 ]; then \
 		echo "Running in parallel on $(N_CPUS) cores..."; \
 		$(OF_PREFIX) decomposePar -force; \
-		if [ $(ADAPTIVE_STOP) -eq 1 ]; then \
-			$(OF_PREFIX) python3 adaptive_stop.py --parallel --np $(N_CPUS); \
-		else \
-			$(OF_PREFIX) mpirun -np $(N_CPUS) foamRun -parallel; \
-		fi; \
+		$(OF_PREFIX) mpirun -np $(N_CPUS) foamRun -parallel; \
 		echo "Reconstructing parallel results..."; \
 		$(OF_PREFIX) reconstructPar; \
 		echo "Cleaning up processor directories..."; \
 		rm -rf processor*; \
 	else \
 		echo "Running in serial..."; \
-		if [ $(ADAPTIVE_STOP) -eq 1 ]; then \
-			$(OF_PREFIX) python3 adaptive_stop.py; \
-		else \
-			$(OF_PREFIX) foamRun; \
-		fi; \
+		$(OF_PREFIX) foamRun; \
 	fi
 
 resume:
 	@if [ $(N_CPUS) -gt 1 ]; then \
 		echo "Resuming in parallel on $(N_CPUS) cores..."; \
-		if [ $(ADAPTIVE_STOP) -eq 1 ]; then \
-			$(OF_PREFIX) python3 adaptive_stop.py --parallel --np $(N_CPUS); \
-		else \
-			$(OF_PREFIX) mpirun -np $(N_CPUS) foamRun -parallel; \
-		fi; \
+		$(OF_PREFIX) mpirun -np $(N_CPUS) foamRun -parallel; \
 		echo "Reconstructing parallel results..."; \
 		$(OF_PREFIX) reconstructPar; \
 		echo "Cleaning up processor directories..."; \
 		rm -rf processor*; \
 	else \
 		echo "Resuming in serial..."; \
-		if [ $(ADAPTIVE_STOP) -eq 1 ]; then \
-			$(OF_PREFIX) python3 adaptive_stop.py; \
-		else \
-			$(OF_PREFIX) foamRun; \
-		fi; \
+		$(OF_PREFIX) foamRun; \
 	fi
 
 clean:
 	rm -f cylinder.geo cylinder.msh
-	rm -f constant/triSurface/cylinder.stl
-	rm -f constant/triSurface/cylinder.eMesh
-	rm -f system/blockMeshDict system/snappyHexMeshDict system/surfaceFeaturesDict system/topoSetDict
 	rm -f constant/6DoF.dat
 	rm -rf 0/alpha.water.orig  # created by setFields usually backup
 	# standard cleanup

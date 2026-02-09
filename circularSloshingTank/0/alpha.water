@@ -21,7 +21,10 @@ boundaryField
 {
     walls
     {
-        type            zeroGradient;
+        type            contactAngle;
+        theta0          90;
+        limit           gradient;
+        value           uniform 0;
     }
     atmosphere
     {

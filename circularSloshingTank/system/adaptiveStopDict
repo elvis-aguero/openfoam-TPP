@@ -9,15 +9,21 @@ FoamFile
 {
     format      ascii;
     class       dictionary;
-    location    "constant";
-    object      phaseProperties;
+    location    "system";
+    object      adaptiveStopDict;
 }
 // * * * * * * * * * * * * * * * * * * * * * * * * * * * * * * * * * * * * * //
 
-phases          (water air);
-
-// Constant water-air surface tension (N/m)
-sigma           0.072;
-
+adaptiveStop
+{
+    enabled         yes;
+    normU           5e-5;
+    maxDeltaAlpha   1e-4;
+    minTime         0.5;
+    window          0.5;
+    minSamples      3;
+    checkInterval   0.5;
+    logInterval     30;
+}
 
 // ************************************************************************* //

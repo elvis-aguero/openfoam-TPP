@@ -9,15 +9,42 @@ FoamFile
 {
     format      ascii;
     class       dictionary;
-    location    "constant";
-    object      phaseProperties;
+    location    "system";
+    object      fvSchemes;
 }
 // * * * * * * * * * * * * * * * * * * * * * * * * * * * * * * * * * * * * * //
 
-phases          (water air);
+ddtSchemes
+{
+    default         Euler;
+}
 
-// Constant water-air surface tension (N/m)
-sigma           0.072;
+gradSchemes
+{
+    default         Gauss linear;
+}
 
+divSchemes
+{
+    div(rhoPhi,U)  Gauss vanLeerV;
+    div(phi,alpha)  Gauss interfaceCompression vanLeer 1;
+
+    div(((rho*nuEff)*dev2(T(grad(U))))) Gauss linear;
+}
+
+laplacianSchemes
+{
+    default         Gauss linear corrected;
+}
+
+interpolationSchemes
+{
+    default         linear;
+}
+
+snGradSchemes
+{
+    default         corrected;
+}
 
 // ************************************************************************* //

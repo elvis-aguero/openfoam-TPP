@@ -10,14 +10,15 @@ FoamFile
     format      ascii;
     class       dictionary;
     location    "constant";
-    object      phaseProperties;
+    object      physicalProperties.water;
 }
 // * * * * * * * * * * * * * * * * * * * * * * * * * * * * * * * * * * * * * //
 
-phases          (water air);
+viscosityModel  constant;
 
-// Constant water-air surface tension (N/m)
-sigma           0.072;
+nu              1e-06;
+
+rho             998.2;
 
 
 // ************************************************************************* //
